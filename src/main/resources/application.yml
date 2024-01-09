@@ -1,0 +1,235 @@
+spring:
+  config:
+    activate:
+      on-profile: default
+  # ====== 404 Exception Handling ======
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+  # ====== 404 Exception Handling ======
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: create
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        globally_quoted_identifiers: true
+jwt:
+  expiration:
+    access: 86400000
+    refresh: 86400000
+  grant: Bearer
+  header: Authorization
+  white-list:
+    /v1/signup,
+    /v1/token/**,
+    /error,
+    /swagger-ui/**,
+    /api-docs/**
+
+logging:
+  level:
+    root: info
+    com.ndm.core: debug
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+
+---
+jasypt:
+  encryptor:
+    bean: jasyptEncryptorAES
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  # ====== 404 Exception Handling ======
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+  # ====== 404 Exception Handling ======
+  datasource:
+    hikari:
+      jdbc-url: ENC(vNur4eXPfyhbGg01hWgFfGlGmfqAIMEU5dxacMusG1BQwzOvDZccaQiV+bZkwqY2cuuFlcFqrwhAyDBQob3vix742ipLfyltbgxNVLXnY1uiS4sMcfEMnOEmfpG10U+3EUctWcBdnka5DK30KIY/6A==)
+      username: ENC(Pkg8Gt7daiX/RakyTuFIBbzEqOl/RMvdee3ZRzO6tYuREGuzfOsXRElelNAckglS)
+      password: ENC(iQPXeXyNgzITyUo+XXqINS6ZV9oHa245qv8sUO6oRrnK6TG+lKNr1fLPE2ongFOl)
+#      jdbc-url: jdbc:mysql://localhost:[forwardedPort]/ddu_db_dev?UTC&characterEncoding=UTF-8
+      driver-class-name: com.mysql.cj.jdbc.Driver
+#      username: ddu_app_dev
+#      password: ddu_app_dev_pw
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: create
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+jwt:
+  expiration:
+    access: 86400000
+    refresh: 86400000
+  grant: Bearer
+  header: Authorization
+  white-list:
+    /v1/signup,
+    /v1/token/**,
+    /error,
+    /swagger-ui/**,
+    /api-docs/**
+
+logging:
+  level:
+    root: info
+    com.ndm.core: debug
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+
+#bastion:
+#  host: 129.154.53.159
+#  user: opc
+#  port: 22
+#  db:
+#    port: 3306
+
+---
+jasypt:
+  encryptor:
+    bean: jasyptEncryptorAES
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  # ====== 404 Exception Handling ======
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+  # ====== 404 Exception Handling ======
+  datasource:
+    hikari:
+      jdbc-url: ENC(ymaz/JZDEzYV3Q/ewsGYTnULFQ/AzHhLt6e8rGNneYZI2ZjzWZwSnuyDFjcAXTxyfFyUYfo8nDHlO87uQG2eHk9sd2GoK9FQDS7FdXXkBkkh4iuX7VW9Ch/eX/qd0oGQ)
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: ENC(PsMTQgQjZSk7CWK0QSGOZwZT6phSuFj/9Kn7JlP5gNu9LiRGQXURb3Whqvlv9YHI)
+      password: ENC(BC3oi6uU5EQtr7Mq/2EYUcptmkQknmohKoZVKFo4Wf+yGUx7GlIbZS1FnOdMhmLS)
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: create
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+jwt:
+  expiration:
+    access: 86400000
+    refresh: 86400000
+  grant: Bearer
+  header: Authorization
+  white-list:
+    /v1/signup,
+    /v1/token/**,
+    /error,
+    /swagger-ui/**,
+    /api-docs/**
+
+logging:
+  level:
+    root: info
+    com.ndm.core: debug
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+
+---
+jasypt:
+  encryptor:
+    bean: jasyptEncryptorAES
+
+spring:
+  config:
+    activate:
+      on-profile: prd
+  # ====== 404 Exception Handling ======
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+  # ====== 404 Exception Handling ======
+  datasource:
+    hikari:
+      jdbc-url: ENC(fD2tYbpYki+34gVTIT5aO4fK/v5z4gL0nvbzNahUff/O0Ob4w9txDmHUSasj8RfQUDqZ0fe+sUQWtsNM/EAFiDl7RuL73oTEoS12pwn0K6UhBLJ7dxoMt+RcUAG5kUVI)
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: ENC(EKzLuOpPMo1hNCj0TpQUEjWssNRu71AdYKh8BmiMDciNW9xTyLfMgX4341uOw3Rg)
+      password: ENC(naYMqeKxGHLwLhcEolGMHCw22SR5I3zw/45zqyZKs0ZeEDn//ChkJOXVxpAD3vRF)
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+jwt:
+  expiration:
+    access: 86400000
+    refresh: 86400000
+  grant: Bearer
+  header: Authorization
+  white-list:
+    /v1/signup,
+    /v1/token/**,
+    /error,
+    /swagger-ui/**,
+    /api-docs/**
+
+logging:
+  level:
+    root: info
+    com.ndm.core: debug
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
