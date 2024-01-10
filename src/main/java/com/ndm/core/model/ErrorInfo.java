@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorInfo {
-    INTERNAL_SERVER_ERROR(500, null, "서버 에러 입니다."),
+    INTERNAL_SERVER_ERROR(500, null, "서버 에러입니다. 잠시 후 다시 시도해주세요."),
     /* =========== Authentication / Authorization 관련 에러 ==========*/
     NOT_FOUND(404, null, "리소스를 찾을 수 없습니다."),
     ACCESS_TOKEN_EXPIRED(401, null, "Access 토큰이 만료되었습니다."),

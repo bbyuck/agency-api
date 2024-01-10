@@ -1,52 +1,3 @@
-spring:
-  config:
-    activate:
-      on-profile: default
-  # ====== 404 Exception Handling ======
-  mvc:
-    throw-exception-if-no-handler-found: true
-  web:
-    resources:
-      add-mappings: false
-  # ====== 404 Exception Handling ======
-  jpa:
-    open-in-view: true
-    hibernate:
-      ddl-auto: create
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-        globally_quoted_identifiers: true
-jwt:
-  expiration:
-    access: 86400000
-    refresh: 86400000
-  grant: Bearer
-  header: Authorization
-  white-list:
-    /v1/signup,
-    /v1/token/**,
-    /error,
-    /swagger-ui/**,
-    /api-docs/**
-
-logging:
-  level:
-    root: info
-    com.ndm.core: debug
-
-springdoc:
-  api-docs:
-    enabled: true
-    path: /api-docs
-  default-produces-media-type: application/json
-  default-consumes-media-type: application/json
-
----
 jasypt:
   encryptor:
     bean: jasyptEncryptorAES
@@ -91,6 +42,7 @@ jwt:
   grant: Bearer
   header: Authorization
   white-list:
+    /v1/kakao/**,
     /v1/signup,
     /v1/token/**,
     /error,
