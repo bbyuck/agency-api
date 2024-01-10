@@ -1,11 +1,10 @@
 package com.ndm.core.domain.matchmaker.controller;
 
 
-import com.ndm.core.model.TraceData;
-import com.ndm.core.model.Response;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
-import com.ndm.core.domain.matchmaker.service.MatchMakerService;
+import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
+import com.ndm.core.model.TraceData;
 import com.ndm.core.model.version.V1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class MatchMakerController {
 
-    private final MatchMakerService matchMakerService;
 
     @Trace
     @PostMapping("/signup")
@@ -36,7 +34,7 @@ public class MatchMakerController {
     public Response<MatchMakerDto> signup(@RequestBody MatchMakerDto matchMakerDto) {
         return Response
                 .<MatchMakerDto>builder()
-                .data(matchMakerService.signup(matchMakerDto))
+                .data(null)
                 .build();
     }
 

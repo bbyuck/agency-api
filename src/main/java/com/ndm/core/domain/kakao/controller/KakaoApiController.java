@@ -24,25 +24,26 @@ public class KakaoApiController {
 
     private final KakaoLoginService kakaoLoginService;
 
-    @Value("${kakao.api.key}")
-    private String kakaoApiKey;
+    @Value("${kakao.key.rest}")
+    private String kakaoRestKey;
 
     @Trace
-    @GetMapping("/kakao/api/key")
-    @Operation(summary = "Kakao API Key", description = "Kakao API Key를 리턴한다.")
+    @GetMapping("/kakao/key/rest")
+    @Operation(summary = "Kakao REST API Key", description = "Kakao REST API Key를 리턴한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200"
                     , description = "SUCCESS"
                     , content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "500", description = "Kakao API Key 리턴 실패"
+            @ApiResponse(responseCode = "500", description = "Kakao REST API Key 리턴 실패"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
-    public Response<String> getKakaoApiKey() {
-
+    public Response<String> getKakaoRestKey() {
+        log.info("kakaoRestKey request ====== {}");
         return Response
                 .<String>builder()
-                .data(kakaoApiKey)
+                .data(kakaoRestKey)
                 .build();
     }
+
 
 }

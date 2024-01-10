@@ -1,11 +1,9 @@
 package com.ndm.core.domain.kakao.dto;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
 @Data
-@Builder
 @ToString
 public class KakaoOAuthResponseDto {
     private String token_type; // 토큰 타입, bearer로 고정
@@ -21,7 +19,16 @@ public class KakaoOAuthResponseDto {
     private int expires_in; // 액세스 토큰 및 ID 토큰 만료 시간
     private String refresh_token; // 사용자 리프레시 토큰 값
     private int refresh_token_expires_in; // 리프레시 토큰 만료 시간(초)
-    private String scope;
+    private String scope;   // scope
+    private String app_id;  // client id
+    private Long id;        // 유저 ID
 
+
+    /**
+     * error
+     */
+    private String error;
+    private String error_description;
+    private String error_code;
 
 }

@@ -7,8 +7,6 @@ spring:
     activate:
       on-profile: local
   # ====== 404 Exception Handling ======
-  mvc:
-    throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
@@ -18,10 +16,7 @@ spring:
       jdbc-url: ENC(vNur4eXPfyhbGg01hWgFfGlGmfqAIMEU5dxacMusG1BQwzOvDZccaQiV+bZkwqY2cuuFlcFqrwhAyDBQob3vix742ipLfyltbgxNVLXnY1uiS4sMcfEMnOEmfpG10U+3EUctWcBdnka5DK30KIY/6A==)
       username: ENC(Pkg8Gt7daiX/RakyTuFIBbzEqOl/RMvdee3ZRzO6tYuREGuzfOsXRElelNAckglS)
       password: ENC(iQPXeXyNgzITyUo+XXqINS6ZV9oHa245qv8sUO6oRrnK6TG+lKNr1fLPE2ongFOl)
-#      jdbc-url: jdbc:mysql://localhost:[forwardedPort]/ddu_db_dev?UTC&characterEncoding=UTF-8
       driver-class-name: com.mysql.cj.jdbc.Driver
-#      username: ddu_app_dev
-#      password: ddu_app_dev_pw
   jpa:
     open-in-view: true
     hibernate:
@@ -35,20 +30,6 @@ spring:
         show_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
-jwt:
-  expiration:
-    access: 86400000
-    refresh: 86400000
-  grant: Bearer
-  header: Authorization
-  white-list:
-    /v1/kakao/**,
-    /v1/signup,
-    /v1/token/**,
-    /error,
-    /swagger-ui/**,
-    /api-docs/**
-
 logging:
   level:
     root: info
@@ -61,13 +42,6 @@ springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
 
-#bastion:
-#  host: 129.154.53.159
-#  user: opc
-#  port: 22
-#  db:
-#    port: 3306
-
 ---
 jasypt:
   encryptor:
@@ -78,8 +52,6 @@ spring:
     activate:
       on-profile: dev
   # ====== 404 Exception Handling ======
-  mvc:
-    throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
@@ -102,19 +74,6 @@ spring:
         format_sql: true
         show_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
-
-jwt:
-  expiration:
-    access: 86400000
-    refresh: 86400000
-  grant: Bearer
-  header: Authorization
-  white-list:
-    /v1/signup,
-    /v1/token/**,
-    /error,
-    /swagger-ui/**,
-    /api-docs/**
 
 logging:
   level:
@@ -139,7 +98,6 @@ spring:
       on-profile: prd
   # ====== 404 Exception Handling ======
   mvc:
-    throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
@@ -161,18 +119,6 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
-jwt:
-  expiration:
-    access: 86400000
-    refresh: 86400000
-  grant: Bearer
-  header: Authorization
-  white-list:
-    /v1/signup,
-    /v1/token/**,
-    /error,
-    /swagger-ui/**,
-    /api-docs/**
 
 logging:
   level:

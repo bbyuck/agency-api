@@ -1,7 +1,6 @@
 package com.ndm.core.domain.matchmaker.entity;
 
 import com.ndm.core.common.BaseEntity;
-import com.ndm.core.domain.matchmaker.dto.TokenInfo;
 import com.ndm.core.model.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,17 +18,8 @@ public class MatchMaker extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "login_id", unique = true, nullable = false, updatable = false)
-    private String loginId;
-
-    @Column(name = "password")
-    private String password;
-
-    @Column(name = "access_token")
-    private String accessToken;
-
-    @Column(name = "refresh_token")
-    private String refreshToken;
+    @Column(name = "kakao_id", unique = true, nullable = false)
+    private Long kakaoId;
 
     @Column(name = "last_login_ip")
     private String lastLoginIp;
@@ -39,11 +29,10 @@ public class MatchMaker extends BaseEntity {
     private Role role;
 
     // ====== 유저 편의 메서드 =======
-    public void updateJwtToken(TokenInfo tokenInfo) {
-        this.accessToken = tokenInfo.getAccessToken();
-        this.refreshToken = tokenInfo.getRefreshToken();
-    }
-
+//    public void updateJwtToken(TokenInfo tokenInfo) {
+//        this.accessToken = tokenInfo.getAccessToken();
+//        this.refreshToken = tokenInfo.getRefreshToken();
+//    }
     public void updateLastLoginIp(String loginIp) {
         this.lastLoginIp = loginIp;
     }

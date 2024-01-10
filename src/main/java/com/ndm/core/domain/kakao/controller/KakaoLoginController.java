@@ -1,9 +1,8 @@
 package com.ndm.core.domain.kakao.controller;
 
 import com.ndm.core.domain.kakao.dto.KakaoLoginDto;
-import com.ndm.core.domain.kakao.dto.KakaoOAuthRequestDto;
+import com.ndm.core.domain.kakao.dto.KakaoLogoutDto;
 import com.ndm.core.domain.kakao.service.KakaoLoginService;
-import com.ndm.core.domain.matchmaker.dto.TokenInfo;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
 import com.ndm.core.model.TraceData;
@@ -29,22 +28,39 @@ public class KakaoLoginController {
 
 
     @Trace
-    @PostMapping("/kakao/oauth/token")
+    @PostMapping("/kakao/login")
+    @Operation(summary = "Kakao oauth token 요청 및 로그인", description = "Kakao oauth token을 발급을 요청하고 로그인한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"
+                    , description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Kakao Login 실패"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<KakaoLoginDto> kakaoLogin(@RequestBody KakaoLoginDto requestDto) {
+        return Response
+                .<KakaoLoginDto>builder()
+                .data(kakaoLoginService.kakaoLogin(requestDto))
+                .build();
+    }
+
+    @Trace
+    @PostMapping("/kakao/logout")
     @Operation(summary = "Kakao oauth token 요청", description = "Kakao oauth token을 발급을 요청하고 로그인한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200"
                     , description = "SUCCESS"
-                    , content = @Content(schema = @Schema(implementation = TokenInfo.class))),
+                    , content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "500", description = "Kakao Login 실패"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
-    public Response<String> kakaoLogin(@RequestBody KakaoLoginDto requestDto) {
+    public Response<String> kakaoLogout(@RequestBody KakaoLogoutDto requestDto) {
 
-        kakaoLoginService.kakaoLogin(requestDto);
+        kakaoLoginService.kakaoLogout(requestDto);
 
         return Response
                 .<String>builder()
-                .data("628d3a3c134c38043b0bd8d5814dc86d")
+                .message("성공적으로 로그아웃 되었습니다.")
                 .build();
     }
 }
