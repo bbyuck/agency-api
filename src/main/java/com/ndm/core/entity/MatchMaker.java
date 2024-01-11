@@ -1,9 +1,11 @@
-package com.ndm.core.domain.matchmaker.entity;
+package com.ndm.core.entity;
 
 import com.ndm.core.common.BaseEntity;
-import com.ndm.core.model.Role;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -21,12 +23,15 @@ public class MatchMaker extends BaseEntity {
     @Column(name = "kakao_id", unique = true, nullable = false)
     private Long kakaoId;
 
-    @Column(name = "last_login_ip")
+    @Column(name = "match_maker_name", unique = true, nullable = false, updatable = false, length = 40)
+    private String name;
+
+    @Column(name = "last_login_ip", length = 30)
     private String lastLoginIp;
 
-    @Column(name = "role", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    // ====== 일대다 연관관계 매핑 =====
+    @OneToMany(mappedBy = "matchMaker")
+    private List<Friend> friends = new ArrayList<>();
 
     // ====== 유저 편의 메서드 =======
 //    public void updateJwtToken(TokenInfo tokenInfo) {

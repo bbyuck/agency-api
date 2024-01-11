@@ -1,9 +1,6 @@
 package com.ndm.core.domain.matchmaker.dto;
 
-import com.ndm.core.model.Role;
 import lombok.*;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter

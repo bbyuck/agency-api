@@ -4,17 +4,14 @@ import com.ndm.core.domain.kakao.dto.KakaoLoginDto;
 import com.ndm.core.domain.kakao.dto.KakaoLogoutDto;
 import com.ndm.core.domain.kakao.dto.KakaoOAuthResponseDto;
 import com.ndm.core.domain.kakao.dto.KakaoUserInfoResponseDto;
-import com.ndm.core.domain.kakao.exception.InvalidAccessTokenException;
 import com.ndm.core.domain.kakao.exception.InvalidAuthorizationCodeException;
-import com.ndm.core.domain.matchmaker.entity.MatchMaker;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;
+import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.model.Current;
-import com.ndm.core.model.Role;
 import com.ndm.core.model.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,7 +66,6 @@ public class KakaoLoginService {
                     .builder()
                     .kakaoId(kakaoUserInfo.getId())
                     .lastLoginIp(current.getClientIp())
-                    .role(Role.ROLE_MATCH_MAKER)
                     .build();
             matchMakerService.join(newMatchMaker);
         }

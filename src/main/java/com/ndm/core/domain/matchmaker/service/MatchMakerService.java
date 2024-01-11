@@ -1,6 +1,6 @@
 package com.ndm.core.domain.matchmaker.service;
 
-import com.ndm.core.domain.matchmaker.entity.MatchMaker;
+import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
