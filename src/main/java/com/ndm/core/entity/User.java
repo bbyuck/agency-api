@@ -1,9 +1,9 @@
 package com.ndm.core.entity;
 
 import com.ndm.core.common.BaseEntity;
-import com.ndm.core.status.Gender;
-import com.ndm.core.status.MBTI;
-import com.ndm.core.status.UserStatus;
+import com.ndm.core.common.enums.Gender;
+import com.ndm.core.common.enums.MBTI;
+import com.ndm.core.common.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,11 +15,18 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@TableGenerator(
+        name = "users_seq_generator",
+        table = "ddu_seq",
+        pkColumnName = "sequence_name",
+        pkColumnValue = "users_seq",
+        allocationSize = 100
+)
 @Table(name = "users")
 public class User extends BaseEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "users_seq_generator")
     @Column(name = "user_id", unique = true, nullable = false, updatable = false)
     private Long id;
 
@@ -27,13 +34,13 @@ public class User extends BaseEntity {
     private Long kakaoId;
 
     @Column(name = "age")
-    private int age;
+    private Integer age;
 
     @Column(name = "address", length = 40)
     private String address;
 
     @Column(name = "height")
-    private int height;
+    private Integer height;
 
     @Column(name = "ideal_type", length = 200)
     private String idealType;
@@ -48,10 +55,10 @@ public class User extends BaseEntity {
     @Column(name = "self_description", length = 300)
     private String selfDescription;
 
-    @Column(name = "allow_photo_exchange", length = 1)
+    @Column(name = "allow_photo_exchange", columnDefinition = "TINYINT(1)")
     private boolean allowPhotoExchange;
 
-    @Column(name = "status", length = 20)
+    @Column(name = "user_status", length = 20)
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 

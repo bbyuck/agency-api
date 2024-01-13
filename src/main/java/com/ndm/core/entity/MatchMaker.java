@@ -13,11 +13,18 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "match_maker")
+@TableGenerator(
+        name = "match_maker_seq_generator",
+        table = "ddu_seq",
+        pkColumnName = "sequence_name",
+        pkColumnValue = "match_maker_seq",
+        allocationSize = 100
+)
 public class MatchMaker extends BaseEntity {
 
     @Id
     @Column(name = "match_maker_id", unique = true, nullable = false, updatable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "match_maker_seq_generator")
     private Long id;
 
     @Column(name = "kakao_id", unique = true, nullable = false)

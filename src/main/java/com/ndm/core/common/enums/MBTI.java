@@ -1,4 +1,4 @@
-package com.ndm.core.status;
+package com.ndm.core.common.enums;
 
 public enum MBTI {
     ISTJ, ISFJ, INFJ, INTJ,

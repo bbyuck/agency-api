@@ -1,5 +1,6 @@
 package com.ndm.core.domain.kakao.dto;
 
+import com.ndm.core.common.enums.MemberType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,4 +14,5 @@ public class KakaoLoginDto {
     private String refreshToken;
     private String lastLoginIp;
 
+    private MemberType memberType;
 }

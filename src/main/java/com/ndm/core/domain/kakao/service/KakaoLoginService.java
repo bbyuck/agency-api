@@ -1,11 +1,13 @@
 package com.ndm.core.domain.kakao.service;
 
+import com.ndm.core.common.enums.MemberType;
 import com.ndm.core.domain.kakao.dto.KakaoLoginDto;
 import com.ndm.core.domain.kakao.dto.KakaoLogoutDto;
 import com.ndm.core.domain.kakao.dto.KakaoOAuthResponseDto;
 import com.ndm.core.domain.kakao.dto.KakaoUserInfoResponseDto;
 import com.ndm.core.domain.kakao.exception.InvalidAuthorizationCodeException;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;
+import com.ndm.core.domain.user.service.UserService;
 import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.exception.GlobalException;
@@ -34,6 +36,8 @@ public class KakaoLoginService {
 
     private final MatchMakerService matchMakerService;
 
+    private final UserService userService;
+
     private final Current current;
 
     @Transactional
@@ -58,27 +62,53 @@ public class KakaoLoginService {
         KakaoUserInfoResponseDto kakaoUserInfo = requestUserInfo(kakaoOAuthResponseDto.getAccess_token());
         log.info("kakao user info ====== {}", kakaoUserInfo);
 
-        if (matchMakerService.isNotMatchMakerExist(kakaoUserInfo.getId())) {
+        Long kakaoId = kakaoUserInfo.getId();
+
+        boolean isNotUser = userService.isNotUserExist(kakaoId);
+
+        boolean isNotMatchMaker = matchMakerService.isNotMatchMakerExist(kakaoId);
+        if (isNotMatchMaker && isNotUser) {
             /**
-             * MatchMaker DB에 존재하지 않음
+             * MatchMaker 및 유저 DB에 존재하지 않음
              */
-            MatchMaker newMatchMaker = MatchMaker
-                    .builder()
-                    .kakaoId(kakaoUserInfo.getId())
+            return KakaoLoginDto.builder()
+                    .kakaoId(kakaoId)
+                    .accessToken(kakaoOAuthResponseDto.getAccess_token())
+                    .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
+                    .memberType(MemberType.NEW)
                     .lastLoginIp(current.getClientIp())
                     .build();
-            matchMakerService.join(newMatchMaker);
+            /**
+             * 화면으로 카카오 로그인 정보 전달해 회원 타입 설정 및 회원 가입 진행
+             */
+        }
+        else if (isNotMatchMaker) {
+            /**
+             * 로그인 요청을 한 클라이언트 === user
+             */
+            log.info("{} ====== user login", kakaoId);
+            return KakaoLoginDto.builder()
+                    .kakaoId(kakaoId)
+                    .accessToken(kakaoOAuthResponseDto.getAccess_token())
+                    .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
+                    .memberType(MemberType.USER)
+                    .lastLoginIp(current.getClientIp())
+                    .build();
         }
         else {
-            log.info("login 완료!");
-        }
+            /**
+             * 로그인 요청을 한 클라이언트 === match_maker
+             */
+            log.info("{} ====== match maker login", kakaoId);
 
-        return KakaoLoginDto.builder()
-                .kakaoId(kakaoUserInfo.getId())
-                .accessToken(kakaoOAuthResponseDto.getAccess_token())
-                .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
-                .lastLoginIp(current.getClientIp())
-                .build();
+            return KakaoLoginDto.builder()
+                    .kakaoId(kakaoId)
+                    .accessToken(kakaoOAuthResponseDto.getAccess_token())
+                    .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
+                    .memberType(MemberType.MATCH_MAKER)
+                    .lastLoginIp(current.getClientIp())
+                    .build();
+        }
     }
 
     @Transactional
