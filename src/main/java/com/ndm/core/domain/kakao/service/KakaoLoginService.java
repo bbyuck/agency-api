@@ -6,9 +6,10 @@ import com.ndm.core.domain.kakao.dto.KakaoLogoutDto;
 import com.ndm.core.domain.kakao.dto.KakaoOAuthResponseDto;
 import com.ndm.core.domain.kakao.dto.KakaoUserInfoResponseDto;
 import com.ndm.core.domain.kakao.exception.InvalidAuthorizationCodeException;
+import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;
+import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.domain.user.service.UserService;
-import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +35,9 @@ public class KakaoLoginService {
     @Value("${kakao.key.rest}")
     private String kakaoRestKey;
 
-    private final MatchMakerService matchMakerService;
+    private final MatchMakerRepository matchMakerRepository;
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     private final Current current;
 
@@ -64,9 +65,9 @@ public class KakaoLoginService {
 
         Long kakaoId = kakaoUserInfo.getId();
 
-        boolean isNotUser = userService.isNotUserExist(kakaoId);
+        boolean isNotUser = userRepository.findByKakaoId(kakaoId) == null;
 
-        boolean isNotMatchMaker = matchMakerService.isNotMatchMakerExist(kakaoId);
+        boolean isNotMatchMaker = matchMakerRepository.findByKakaoId(kakaoId) == null;
         if (isNotMatchMaker && isNotUser) {
             /**
              * MatchMaker 및 유저 DB에 존재하지 않음

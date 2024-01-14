@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorInfo {
-    INTERNAL_SERVER_ERROR(500, null, "서버 에러입니다. 잠시 후 다시 시도해주세요."),
+    INTERNAL_SERVER_ERROR(500, null, "서버 에러입니다.\n관리자에게 문의해주세요."),
     /* =========== Authentication / Authorization 관련 에러 ==========*/
     NOT_FOUND(404, null, "리소스를 찾을 수 없습니다."),
     ACCESS_TOKEN_EXPIRED(401, null, "Access 토큰이 만료되었습니다."),
@@ -22,7 +22,13 @@ public enum ErrorInfo {
     /* =========== Authentication / Authorization 관련 에러 ==========*/
 
     /* =========== SignUp / Login 관련 에러 ==========*/
-    REGISTERED_USER(400, "LOGIN_ID", "이미 존재하는 ID 입니다."),
+    REGISTERED_MEMBER(400, "MEMBER.ID", "이미 가입된 ID 입니다."),
+    USED_MATCH_MAKER_NAME(400, "USED_MATCH_MAKER_NAME", "이미 사용중인 닉네임입니다."),
+    INVALID_MATCH_MAKER_NAME_1(400, "INVALID_MATCH_MAKER_NAME", "닉네임은 한글, 영문, 숫자로만 구성되어야 합니다."),
+    INVALID_MATCH_MAKER_NAME_2(400, "INVALID_MATCH_MAKER_NAME", "닉네임은 1글자 이상, 15자 이하여야 합니다."),
+
+    INVALID_MATCH_MAKER_NAME_3(400, "INVALID_MATCH_MAKER_NAME", "주선자를 찾을 수 없습니다.\n닉네임을 다시 확인해주세요."),
+
     INVALID_LOGIN_ID_0(400, "LOGIN_ID", "ID를 입력해주세요."),
     INVALID_LOGIN_ID_1(400, "LOGIN_ID", "ID는 4자 이상, 10자 이하여야 합니다."),
     INVALID_LOGIN_ID_2(400, "LOGIN_ID", "ID는 영문으로 시작해야 합니다."),

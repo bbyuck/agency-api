@@ -1,13 +1,11 @@
-package com.ndm.core.domain.matchmaker.dto;
+package com.ndm.core.domain.user.dto;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class MatchMakerDto {
+public class UserDto {
 
     private Long kakaoId;
 
@@ -18,5 +16,4 @@ public class MatchMakerDto {
     private String lastLoginIp;
 
     private String matchMakerName;
-
 }

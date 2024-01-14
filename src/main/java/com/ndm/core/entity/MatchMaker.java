@@ -38,7 +38,7 @@ public class MatchMaker extends BaseEntity {
 
     // ====== 일대다 연관관계 매핑 =====
     @OneToMany(mappedBy = "matchMaker")
-    private List<Friend> friends = new ArrayList<>();
+    private List<Friendship> friendships = new ArrayList<>();
 
     // ====== 유저 편의 메서드 =======
 //    public void updateJwtToken(TokenInfo tokenInfo) {

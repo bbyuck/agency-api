@@ -66,10 +66,11 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+
     // ======== 일대다 매핑 =========
 
     @OneToMany(mappedBy = "user")
-    private List<Friend> friends = new ArrayList<>();
+    private List<Friendship> friendships = new ArrayList<>();
 
     @OneToMany(mappedBy = "owner")
     private List<Photo> photos = new ArrayList<>();

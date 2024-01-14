@@ -1,5 +1,5 @@
 package com.ndm.core.common.enums;
 
-public enum FriendStatus {
+public enum FriendshipStatus {
     ON, OFF
 }
