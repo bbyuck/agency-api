@@ -35,6 +35,10 @@ public class Matching extends BaseEntity {
     @JoinColumn(name = "woman_id")
     private User woman;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "matching_request_id")
+    private MatchingRequest matchingRequest;
+
     @Column(name = "matching_status", length = 20)
     @Enumerated(EnumType.STRING)
     private MatchStatus status;

@@ -1,5 +1,7 @@
 package com.ndm.core.domain.matchmaker.dto;
 
+import com.ndm.core.common.enums.MemberType;
+import com.ndm.core.common.enums.OAuthCode;
 import lombok.*;
 
 @Getter
@@ -9,14 +11,13 @@ import lombok.*;
 @NoArgsConstructor
 public class MatchMakerDto {
 
-    private Long kakaoId;
+    private String credentialToken;
 
     private String accessToken;
 
     private String refreshToken;
 
-    private String lastLoginIp;
+    private final MemberType memberType = MemberType.MATCH_MAKER;
 
-    private String matchMakerName;
 
 }

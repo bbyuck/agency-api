@@ -9,16 +9,19 @@ public enum ErrorInfo {
     INTERNAL_SERVER_ERROR(500, null, "서버 에러입니다.\n관리자에게 문의해주세요."),
     /* =========== Authentication / Authorization 관련 에러 ==========*/
     NOT_FOUND(404, null, "리소스를 찾을 수 없습니다."),
+    ID_TOKEN_EXPIRED(401, null, "ID 토큰이 만료되었습니다."),
     ACCESS_TOKEN_EXPIRED(401, null, "Access 토큰이 만료되었습니다."),
     REFRESH_TOKEN_EXPIRED(401, null, "Refresh 토큰이 만료되었습니다."),
     NO_AUTH_INFO_TOKEN(401, null, "권한 정보가 없는 토큰입니다."),
-    INVALID_TOKEN(401, null, "잘못된 토큰입니다."),
+    INVALID_TOKEN(401, "INVALID_TOKEN", "잘못된 토큰입니다."),
     UNSUPPORTED_JWT(401, null, "지원하지 않는 JWT 토큰입니다."),
     EMPTY_CLAIMS(401, null, "JWT claims 값이 비어있습니다."),
     AUTHENTICATION_FAILED(401, null, "인증에 실패했습니다."),
     USER_NOT_FOUND(401, "USER_NOT_FOUND", "존재하지 않는 유저입니다."),
     BAD_CREDENTIAL(401, null, "잘못된 ID/PW 입니다."),
     IP_ADDRESS_CHANGED(400, null, "마지막 로그인 IP와 다른 IP로부터 들어온 요청입니다."),
+    INVALID_CREDENTIAL_TOKEN(401, "INVALID_CREDENTIAL_TOKEN", "잘못된 인증 토큰입니다."),
+    INVALID_AUTHORIZATION_CODE(401, "INVALID_AUTHORIZATION_CODE", "잘못된 Authorization code 입니다."),
     /* =========== Authentication / Authorization 관련 에러 ==========*/
 
     /* =========== SignUp / Login 관련 에러 ==========*/

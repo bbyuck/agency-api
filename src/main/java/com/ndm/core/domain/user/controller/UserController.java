@@ -1,6 +1,5 @@
 package com.ndm.core.domain.user.controller;
 
-import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.service.UserService;
 import com.ndm.core.model.Response;

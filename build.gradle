@@ -29,6 +29,9 @@ dependencies {
 	implementation 'com.mysql:mysql-connector-j'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
+	/* kakao jwt signature */
+	implementation 'com.auth0:java-jwt:4.4.0'
+
 	/* json simple */
 	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 

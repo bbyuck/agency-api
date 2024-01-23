@@ -1,5 +1,7 @@
 package com.ndm.core.domain.user.dto;
 
+import com.ndm.core.common.enums.MemberType;
+import com.ndm.core.common.enums.OAuthCode;
 import lombok.Builder;
 import lombok.Data;
 
@@ -7,13 +9,12 @@ import lombok.Data;
 @Builder
 public class UserDto {
 
-    private Long kakaoId;
+    private String credentialToken;
 
     private String accessToken;
 
     private String refreshToken;
 
-    private String lastLoginIp;
+    private final MemberType memberType = MemberType.USER;
 
-    private String matchMakerName;
 }

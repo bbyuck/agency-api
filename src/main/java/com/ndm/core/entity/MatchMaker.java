@@ -1,6 +1,7 @@
 package com.ndm.core.entity;
 
 import com.ndm.core.common.BaseEntity;
+import com.ndm.core.common.enums.OAuthCode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,14 +28,24 @@ public class MatchMaker extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "match_maker_seq_generator")
     private Long id;
 
-    @Column(name = "kakao_id", unique = true, nullable = false)
-    private Long kakaoId;
+    @Column(name = "oauth_id", length = 40)
+    private String oauthId;
 
-    @Column(name = "match_maker_name", unique = true, nullable = false, updatable = false, length = 40)
-    private String name;
+    @Column(name = "oauth_code")
+    @Enumerated(EnumType.STRING)
+    private OAuthCode oauthCode;
+
+    @Column(name = "match_maker_token", length = 36, unique = true, nullable = false)
+    private String matchMakerToken;
 
     @Column(name = "last_login_ip", length = 30)
     private String lastLoginIp;
+
+    @Column(name = "access_token", length = 100)
+    private String accessToken;
+
+    @Column(name = "refresh_token", length = 100)
+    private String refreshToken;
 
     // ====== 일대다 연관관계 매핑 =====
     @OneToMany(mappedBy = "matchMaker")

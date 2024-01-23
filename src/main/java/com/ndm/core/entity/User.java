@@ -3,12 +3,15 @@ package com.ndm.core.entity;
 import com.ndm.core.common.BaseEntity;
 import com.ndm.core.common.enums.Gender;
 import com.ndm.core.common.enums.MBTI;
+import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.ndm.core.common.enums.UserStatus.NEW;
 
 @Entity
 @Getter
@@ -30,11 +33,18 @@ public class User extends BaseEntity {
     @Column(name = "user_id", unique = true, nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "kakao_id", unique = true, nullable = false)
-    private Long kakaoId;
+    @Column(name = "oauth_id", unique = true, length = 40)
+    private String oauthId;
 
-    @Column(name = "age")
-    private Integer age;
+    @Column(name = "oauth_code", length = 10)
+    @Enumerated(EnumType.STRING)
+    private OAuthCode oauthCode;
+
+    @Column(name = "user_token", length = 36, unique = true, nullable = false)
+    private String userToken;
+
+    @Column(name = "age", length = 10)
+    private String age;
 
     @Column(name = "address", length = 40)
     private String address;
@@ -42,7 +52,7 @@ public class User extends BaseEntity {
     @Column(name = "height")
     private Integer height;
 
-    @Column(name = "ideal_type", length = 200)
+    @Column(name = "ideal_type", length = 400)
     private String idealType;
 
     @Column(name = "hobby", length = 100)
@@ -52,7 +62,10 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private MBTI mbti;
 
-    @Column(name = "self_description", length = 300)
+    @Column(name = "smoking", columnDefinition = "TINYINT(1)")
+    private boolean smoking;
+
+    @Column(name = "self_description", length = 400)
     private String selfDescription;
 
     @Column(name = "allow_photo_exchange", columnDefinition = "TINYINT(1)")
@@ -66,6 +79,14 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Column(name = "last_login_ip", length = 30)
+    private String lastLoginIp;
+
+    @Column(name = "access_token", length = 100)
+    private String accessToken;
+
+    @Column(name = "refresh_token", length = 100)
+    private String refreshToken;
 
     // ======== 일대다 매핑 =========
 
@@ -74,5 +95,10 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "owner")
     private List<Photo> photos = new ArrayList<>();
+
+    // ========== 유저 편의 메소드 ===========
+    public void officiallySignedUp() {
+        this.status = NEW;
+    }
 
 }
