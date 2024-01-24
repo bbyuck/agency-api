@@ -41,9 +41,15 @@ public enum ErrorInfo {
     INVALID_PASSWORD_2(400, "PASSWORD", "Password는 영문, 숫자, !,@,#,$,%,^,&,* 만 허용됩니다."),
     INVALID_PASSWORD_3(400, "PASSWORD", "Password는 영문, 숫자, 특수문자가 반드시 각각 하나 이상씩 포함되어야 합니다."),
     INVALID_PASSWORD_4(400, "PASSWORD_CONFIRM", "Password와 Confirm이 일치하지 않습니다. 다시 확인해주세요."),
-    INVALID_PASSWORD_CONFIRM_0(400, "PASSWORD_CONFIRM", "Password를 한 번 더 입력해주세요.");
+    INVALID_PASSWORD_CONFIRM_0(400, "PASSWORD_CONFIRM", "Password를 한 번 더 입력해주세요."),
+
+
+    INVALID_MATCHMAKER_CODE(400, "INVALID_MATCHMAKER_CODE", "잘못된 주선자 코드를 입력했습니다."),
+    MATCHMAKER_NOT_FOUND(400, "INVALID_MATCHMAKER_CODE", "해당 주선자를 찾을 수 없습니다.");
 
     ;
+
+
 
 
     private final int httpStatus;

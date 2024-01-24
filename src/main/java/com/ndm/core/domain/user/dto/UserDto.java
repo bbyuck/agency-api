@@ -9,6 +9,8 @@ import lombok.Data;
 @Builder
 public class UserDto {
 
+    private String matchMakerCode;
+
     private String credentialToken;
 
     private String accessToken;

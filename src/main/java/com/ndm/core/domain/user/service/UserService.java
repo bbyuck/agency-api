@@ -1,10 +1,15 @@
 package com.ndm.core.domain.user.service;
 
+import com.ndm.core.common.enums.FriendshipStatus;
 import com.ndm.core.common.enums.MemberType;
 import com.ndm.core.common.enums.OAuthCode;
+import com.ndm.core.common.util.RSACrypto;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
+import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.repository.UserRepository;
+import com.ndm.core.entity.Friendship;
+import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.entity.User;
 import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
@@ -13,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.ndm.core.common.enums.OAuthCode.KAKAO;
@@ -30,8 +37,11 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final MatchMakerRepository matchMakerRepository;
+
     private final FriendshipRepository friendshipRepository;
 
+    private final RSACrypto rsaCrypto;
 
     private String issueUserToken() {
         return UUID.randomUUID().toString().replace("-", "");
@@ -74,6 +84,32 @@ public class UserService {
     }
 
     public UserDto join(UserDto userDto) {
+        String matchMakerCode = userDto.getMatchMakerCode();
+        /**
+         * 주선자 코드 확인
+         */
+        if (!StringUtils.hasText(matchMakerCode)) {
+            log.error("주선자 코드가 없습니다.");
+            throw new GlobalException(ErrorInfo.INVALID_MATCHMAKER_CODE);
+        }
+        Long matchMakerId;
+        try {
+             matchMakerId = Long.valueOf(rsaCrypto.decrypt(matchMakerCode));
+        }
+        catch(Exception e) {
+            log.error(e.getMessage(), e);
+            throw new GlobalException(ErrorInfo.INVALID_MATCHMAKER_CODE);
+        }
+
+        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findById(matchMakerId);
+        if (optionalMatchMaker.isEmpty()) {
+            log.debug("입력한 코드로 주선자를 찾지 못했습니다. 코드를 다시 확인해주세요.");
+            throw new GlobalException(ErrorInfo.MATCHMAKER_NOT_FOUND);
+        }
+
+        /**
+         * 임시유저 조회
+         */
         User newUser = query.selectFrom(user)
                 .where(user.userToken.eq(userDto.getCredentialToken())).fetchOne();
 
@@ -87,6 +123,19 @@ public class UserService {
             throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
         }
 
+        /**
+         * 유저와 주선자간 관계 생성
+         */
+        Friendship friendship = Friendship.builder()
+                .user(newUser)
+                .matchMaker(optionalMatchMaker.get())
+                .status(FriendshipStatus.ON)
+                .build();
+        friendshipRepository.save(friendship);
+
+        /**
+         * 정식 가입 상태로 상태 변경
+         */
         newUser.officiallySignedUp();
 
         return UserDto.builder()

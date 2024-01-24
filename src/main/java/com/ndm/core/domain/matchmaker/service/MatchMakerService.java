@@ -1,15 +1,12 @@
 package com.ndm.core.domain.matchmaker.service;
 
-import com.ndm.core.common.enums.MemberType;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.enums.UserStatus;
+import com.ndm.core.common.util.RSACrypto;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
-import com.ndm.core.domain.user.dto.UserDto;
-import com.ndm.core.domain.user.repository.UserRepository;
-import com.ndm.core.domain.user.service.UserService;
-import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
-import com.ndm.core.entity.QUser;
+import com.ndm.core.domain.user.repository.UserRepository;
+import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.ErrorInfo;
@@ -17,11 +14,14 @@ import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.ndm.core.entity.QMatchMaker.*;
-import static com.ndm.core.entity.QUser.*;
+import java.util.Optional;
+
+import static com.ndm.core.entity.QMatchMaker.matchMaker;
+import static com.ndm.core.entity.QUser.user;
 import static com.ndm.core.model.ErrorInfo.*;
 
 @Slf4j
@@ -35,6 +35,10 @@ public class MatchMakerService {
     private final Current current;
 
     private final UserRepository userRepository;
+    private final RSACrypto rsaCrypto;
+
+    @Value("${client.location}")
+    public String clientLocation;
 
     @Transactional(readOnly = true)
     public MatchMakerDto findMatchMakerByOAuth(String oauthId, OAuthCode oauthCode) {
@@ -135,5 +139,30 @@ public class MatchMakerService {
         if (!matchMakerName.matches(matchMakerNameRule2)) {
             throw new GlobalException(INVALID_MATCH_MAKER_NAME_2);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public String getCode(MatchMakerDto matchMakerDto) {
+        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findByMatchMakerToken(matchMakerDto.getCredentialToken());
+
+        if (optionalMatchMaker.isEmpty()) {
+            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
+        }
+
+        try {
+            return rsaCrypto.encrypt(String.valueOf(optionalMatchMaker.get().getId()));
+        }
+        catch (Exception e) {
+            log.error("암호화 도중 에러가 발생했습니다.");
+            log.error(e.getMessage(), e);
+            throw new GlobalException(INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public String getUriWithCode(MatchMakerDto matchMakerDto) {
+        String code = getCode(matchMakerDto);
+
+        return clientLocation + "?matchmaker=" + code;
     }
 }

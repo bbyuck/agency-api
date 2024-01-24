@@ -13,9 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @V1
 @RestController
@@ -40,4 +38,17 @@ public class MatchMakerController {
                 .build();
     }
 
+    @Trace
+    @GetMapping("/matchmaker/link")
+    @Operation(summary = "유저 회원가입에 필요로하는 주선자 코드를 담은 uri 가져오기", description = "주선자 코드를 담은 uri을 리턴한다.")
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "SUCCESS"
+            , content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "회원 가입 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<String> getCode(MatchMakerDto matchMakerDto) {
+        return Response.<String>builder()
+                .data(matchMakerService.getUriWithCode(matchMakerDto))
+                .build();
+    }
 }

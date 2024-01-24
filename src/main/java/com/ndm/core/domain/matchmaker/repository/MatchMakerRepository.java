@@ -3,6 +3,9 @@ package com.ndm.core.domain.matchmaker.repository;
 import com.ndm.core.entity.MatchMaker;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface MatchMakerRepository extends JpaRepository<MatchMaker, Long> {
-    MatchMaker findByOauthId(String oauthId);
+
+    Optional<MatchMaker> findByMatchMakerToken(String matchMakerToken);
 }
