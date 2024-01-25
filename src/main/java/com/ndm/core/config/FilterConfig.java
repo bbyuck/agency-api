@@ -18,7 +18,7 @@ public class FilterConfig {
     @Value("${client.location}")
     private String clientLocation;
 
-    private final String[] ALLOWED_HEADER = { "Authorization", "Content-Type", "Credential-Token", "Access-Token", "Refresh-Token" };
+    private final String[] ALLOWED_HEADER = { "Origin", "X-Requested-with", "Accept", "Authorization", "Content-Type", "Credential-Token", "Access-Token", "Refresh-Token" };
 
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilterFilter() {
