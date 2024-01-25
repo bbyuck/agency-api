@@ -39,6 +39,9 @@ public class KakaoLoginService {
     @Value("${kakao.key.rest}")
     private String kakaoRestKey;
 
+    @Value("${client.location}")
+    private String clientLocation;
+
     private final MatchMakerService matchMakerService;
 
     private final Current current;
@@ -166,7 +169,7 @@ public class KakaoLoginService {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("grant_type", "authorization_code");
         requestBody.add("client_id", kakaoRestKey);
-        requestBody.add("redirect_uri", "http://localhost:3000/auth");
+        requestBody.add("redirect_uri", clientLocation + "/auth");
         requestBody.add("code", authorizationCode);
         try {
             KakaoOAuthResponseDto kakaoOAuthResponseDto = restClient.post()
