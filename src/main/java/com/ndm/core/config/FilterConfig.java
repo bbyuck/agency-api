@@ -10,18 +10,22 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
+
 @Configuration
 public class FilterConfig {
 
     @Value("${client.location}")
     private String clientLocation;
 
+    private final String[] ALLOWED_HEADER = { "Authorization", "Content-Type", "Credential-Token", "Access-Token", "Refresh-Token" };
+
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilterFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(false);
         config.addAllowedOrigin(clientLocation);
-        config.addAllowedHeader("*");
+        Arrays.stream(ALLOWED_HEADER).forEach(config::addAllowedHeader);
         config.addAllowedMethod("*");
         config.setMaxAge(3600L);
 
