@@ -4,6 +4,9 @@ import com.ndm.core.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Entity
 @Getter
 @Builder
@@ -30,5 +33,8 @@ public class Photo extends BaseEntity {
 
     @Column(name = "file_path", length = 250)
     private String filePath;
+
+    @Transient
+    public static final List<String> EXTENTIONS = Arrays.asList("png", "jpg", "jpeg");
 
 }

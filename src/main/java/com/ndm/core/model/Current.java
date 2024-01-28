@@ -12,7 +12,11 @@ public class Current {
     private final HttpServletRequest request;
 
     public String getUserId() {
-        return request.getHeader(HeaderKey.X_LOGIN_ID.name());
+        return request.getHeader(HeaderKey.X_LOGIN_ID.key());
+    }
+
+    public String getUserCredentialToken() {
+        return request.getHeader(HeaderKey.X_Credential_Token.key());
     }
 
     public String getClientIp() {

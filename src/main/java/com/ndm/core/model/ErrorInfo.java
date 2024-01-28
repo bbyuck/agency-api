@@ -52,6 +52,10 @@ public enum ErrorInfo {
     DO_NOT_AGREE(400, "DO_NOT_AGREE", "필수 이용 약관 중 동의하지 않은 항목이 존재합니다.\n관리자에게 문의해주세요."),
     AGREEMENT_CODE_DOES_NOT_SELECTED(400, "AGREEMENT_CODE_DOES_NOT_SELECTED", "동의서가 선택되지 않았습니다."),
     AGREEMENT_NOT_FOUND(500, "AGREEMENT_NOT_FOUND", "동의서를 찾지 못했습니다.\n관리자에게 문의해주세요."),
+
+    // ==================== 파일 관련 exception ========================
+    FILE_UPLOAD(500, "FILE_UPLOAD", "파일 업로드 중 에러가 발생했습니다.\n관리자에게 문의해주세요."),
+    NOT_SUPPORTED_FILE_EXTENSION(400, "NOT_SUPPORTED_FILE_EXTENSION", "지원하지 않는 파일 확장자입니다.");
     ;
 
 

@@ -1,5 +1,6 @@
 package com.ndm.core.filter;
 
+import com.ndm.core.model.HeaderKey;
 import com.ndm.core.model.TraceData;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,6 +21,7 @@ public class AttributeFilter extends OncePerRequestFilter {
         // TraceData attribute
         request.setAttribute(TRACE_DATA.name(), TraceData.builder().traceId(UUID.randomUUID().toString()).build());
 
+        System.out.println("request = " + request.getHeader(HeaderKey.X_Credential_Token.name()));
         chain.doFilter(request, response);
     }
 }
