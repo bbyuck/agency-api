@@ -4,14 +4,14 @@ import com.ndm.core.common.BaseEntity;
 import com.ndm.core.common.enums.Gender;
 import com.ndm.core.common.enums.MBTI;
 import com.ndm.core.common.enums.OAuthCode;
-import com.ndm.core.common.enums.UserStatus;
+import com.ndm.core.common.enums.MemberStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.ndm.core.common.enums.UserStatus.NEW;
+import static com.ndm.core.common.enums.MemberStatus.NEW;
 
 @Entity
 @Getter
@@ -68,12 +68,9 @@ public class User extends BaseEntity {
     @Column(name = "self_description", length = 400)
     private String selfDescription;
 
-    @Column(name = "allow_photo_exchange", columnDefinition = "TINYINT(1)")
-    private boolean allowPhotoExchange;
-
-    @Column(name = "user_status", length = 20)
+    @Column(name = "member_status", length = 20)
     @Enumerated(EnumType.STRING)
-    private UserStatus status;
+    private MemberStatus status;
 
     @Column(name = "gender", length = 1)
     @Enumerated(EnumType.STRING)
@@ -96,9 +93,14 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "owner")
     private List<Photo> photos = new ArrayList<>();
 
-    // ========== 유저 편의 메소드 ===========
-    public void officiallySignedUp() {
-        this.status = NEW;
+
+    public void updateLoginInfo(String clientIp, String accessToken, String refreshToken) {
+        this.lastLoginIp = clientIp;
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 
+    public void changeUserStatus(MemberStatus memberStatus) {
+        this.status = memberStatus;
+    }
 }

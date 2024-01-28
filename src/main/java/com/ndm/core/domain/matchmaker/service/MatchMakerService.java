@@ -1,15 +1,15 @@
 package com.ndm.core.domain.matchmaker.service;
 
+import com.ndm.core.common.enums.MemberStatus;
 import com.ndm.core.common.enums.OAuthCode;
-import com.ndm.core.common.enums.UserStatus;
+import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
+import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.MatchMaker;
-import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
-import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 import static com.ndm.core.entity.QMatchMaker.matchMaker;
-import static com.ndm.core.entity.QUser.user;
 import static com.ndm.core.model.ErrorInfo.*;
 
 @Slf4j
@@ -32,13 +31,29 @@ public class MatchMakerService {
 
     private final JPAQueryFactory query;
     private final MatchMakerRepository matchMakerRepository;
-    private final Current current;
-
     private final UserRepository userRepository;
+
+    private final AgreementService agreementService;
+
+    private final Current current;
     private final RSACrypto rsaCrypto;
 
     @Value("${client.location}")
     public String clientLocation;
+
+    private final CommonUtil commonUtil;
+
+
+    public void login(MatchMakerDto matchMakerDto) {
+        Optional<MatchMaker> optional = matchMakerRepository.findByMatchMakerToken(matchMakerDto.getCredentialToken());
+
+        if (optional.isEmpty()) {
+            log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
+            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
+        }
+        MatchMaker matchMaker = optional.get();
+        matchMaker.updateLoginInfo(matchMakerDto.getAccessToken(), matchMakerDto.getRefreshToken(), current.getClientIp());
+    }
 
     @Transactional(readOnly = true)
     public MatchMakerDto findMatchMakerByOAuth(String oauthId, OAuthCode oauthCode) {
@@ -53,46 +68,53 @@ public class MatchMakerService {
                 .credentialToken(result.getMatchMakerToken())
                 .accessToken(result.getAccessToken())
                 .refreshToken(result.getRefreshToken())
+                .memberStatus(result.getStatus())
                 .build();
     }
 
     public MatchMakerDto join(MatchMakerDto newMatchMakerDto) {
+        String decryptedOauthId = null;
+
+        try {
+            decryptedOauthId = rsaCrypto.decrypt(newMatchMakerDto.getOauthId());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new GlobalException(INVALID_OAUTH_ID);
+        }
+
         // 1. 가입 이력 확인
-        MatchMaker findMatchMaker = query.selectFrom(matchMaker).where(
-                matchMaker.matchMakerToken.eq(newMatchMakerDto.getCredentialToken())
-        ).fetchOne();
+        MatchMaker findMatchMaker = query.selectFrom(matchMaker)
+                .where(matchMaker.oauthId.eq(decryptedOauthId)
+                        .and(matchMaker.oauthCode.eq(newMatchMakerDto.getOauthCode()))
+                ).fetchOne();
 
         if (findMatchMaker != null) {
             log.error("이미 가입된 주선자입니다.");
-            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
+            throw new GlobalException(INVALID_OAUTH_ID);
         }
-        // 로그인 요청시 임시생성된 유저
-        User tempUser = query.selectFrom(user)
-                .where(user.userToken.eq(newMatchMakerDto.getCredentialToken()))
-                .fetchOne();
-        if (tempUser == null || tempUser.getStatus() != UserStatus.TEMP) {
-            log.error("임시 유저가 없습니다.");
-            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
+        // 필수 동의서 모두 동의되어있는지 확인
+        if (!agreementService.agreeWithAllEssential(OAuthCode.KAKAO, decryptedOauthId)) {
+            log.error(DO_NOT_AGREE.getMessage());
+            throw new GlobalException(DO_NOT_AGREE);
         }
-
 
         MatchMaker newMatchMaker = MatchMaker.builder()
-                .matchMakerToken(tempUser.getUserToken())
-                .oauthCode(tempUser.getOauthCode())
-                .oauthId(tempUser.getOauthId())
-                .accessToken(tempUser.getAccessToken())
-                .refreshToken(tempUser.getRefreshToken())
+                .matchMakerToken(commonUtil.issueMemberToken())
+                .oauthCode(newMatchMakerDto.getOauthCode())
+                .oauthId(decryptedOauthId)
+                .accessToken(newMatchMakerDto.getAccessToken())
+                .refreshToken(newMatchMakerDto.getRefreshToken())
                 .lastLoginIp(current.getClientIp())
+                .status(MemberStatus.NEW)
                 .build();
         matchMakerRepository.save(newMatchMaker);
 
-        // 임시 유저 제거
-        userRepository.delete(tempUser);
 
         return MatchMakerDto.builder()
                 .credentialToken(newMatchMaker.getMatchMakerToken())
                 .accessToken(newMatchMaker.getAccessToken())
                 .refreshToken(newMatchMaker.getRefreshToken())
+                .memberStatus(newMatchMaker.getStatus())
                 .build();
     }
 
@@ -151,8 +173,7 @@ public class MatchMakerService {
 
         try {
             return rsaCrypto.encrypt(String.valueOf(optionalMatchMaker.get().getId()));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("암호화 도중 에러가 발생했습니다.");
             log.error(e.getMessage(), e);
             throw new GlobalException(INTERNAL_SERVER_ERROR);

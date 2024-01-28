@@ -49,9 +49,6 @@ public class Matching extends BaseEntity {
     @Column(name = "requested_by")
     private Long requester_id;
 
-    @Column(name = "photo_exchange", columnDefinition = "TINYINT(1)")
-    private boolean photoExchange;
-
     @Column(name = "match_date")
     private LocalDateTime matchDate;
 

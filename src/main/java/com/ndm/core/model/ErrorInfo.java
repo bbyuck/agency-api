@@ -45,11 +45,14 @@ public enum ErrorInfo {
 
 
     INVALID_MATCHMAKER_CODE(400, "INVALID_MATCHMAKER_CODE", "잘못된 주선자 코드를 입력했습니다."),
-    MATCHMAKER_NOT_FOUND(400, "INVALID_MATCHMAKER_CODE", "해당 주선자를 찾을 수 없습니다.");
+    MATCHMAKER_NOT_FOUND(400, "INVALID_MATCHMAKER_CODE", "해당 주선자를 찾을 수 없습니다."),
+    INVALID_OAUTH_ID(400, "INVALID_OAUTH_ID", "잘못된 ID입니다.\n로그인을 다시 시도해주세요."),
 
+    // ==================== 동의서 관련 exception =======================
+    DO_NOT_AGREE(400, "DO_NOT_AGREE", "필수 이용 약관 중 동의하지 않은 항목이 존재합니다.\n관리자에게 문의해주세요."),
+    AGREEMENT_CODE_DOES_NOT_SELECTED(400, "AGREEMENT_CODE_DOES_NOT_SELECTED", "동의서가 선택되지 않았습니다."),
+    AGREEMENT_NOT_FOUND(500, "AGREEMENT_NOT_FOUND", "동의서를 찾지 못했습니다.\n관리자에게 문의해주세요."),
     ;
-
-
 
 
     private final int httpStatus;

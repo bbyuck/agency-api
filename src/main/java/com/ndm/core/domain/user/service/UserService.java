@@ -1,9 +1,10 @@
 package com.ndm.core.domain.user.service;
 
 import com.ndm.core.common.enums.FriendshipStatus;
-import com.ndm.core.common.enums.MemberType;
 import com.ndm.core.common.enums.OAuthCode;
+import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
+import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.user.dto.UserDto;
@@ -11,6 +12,7 @@ import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.Friendship;
 import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.entity.User;
+import com.ndm.core.model.Current;
 import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -21,10 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
-import java.util.UUID;
 
-import static com.ndm.core.common.enums.OAuthCode.KAKAO;
-import static com.ndm.core.common.enums.UserStatus.TEMP;
+import static com.ndm.core.common.enums.MemberStatus.*;
 import static com.ndm.core.entity.QUser.user;
 
 @Slf4j
@@ -41,46 +41,41 @@ public class UserService {
 
     private final FriendshipRepository friendshipRepository;
 
+    private final AgreementService agreementService;
+
     private final RSACrypto rsaCrypto;
 
-    private String issueUserToken() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
+    private final Current current;
 
+    private final CommonUtil commonUtil;
 
     @Transactional(readOnly = true)
     public UserDto findUserByOAuth(String oauthId, OAuthCode oAuthCode) {
         User result = query.selectFrom(user)
-                .where( user.oauthId.eq(oauthId)
-                .and(   user.oauthCode.eq(oAuthCode)
-                ))
+                .where(user.oauthId.eq(oauthId)
+                        .and(user.oauthCode.eq(oAuthCode)
+                        ))
                 .fetchOne();
 
         return result == null ?
                 UserDto.builder().build() :
                 UserDto.builder()
-                .credentialToken(result.getUserToken())
-                .accessToken(result.getAccessToken())
-                .refreshToken(result.getRefreshToken())
+                        .credentialToken(result.getUserToken())
+                        .accessToken(result.getAccessToken())
+                        .refreshToken(result.getRefreshToken())
+                        .memberStatus(result.getStatus())
                 .build();
     }
 
-    public UserDto kakaoTempJoin(String kakaoId, String accessToken, String refreshToken) {
-        User newUser = User.builder()
-                .oauthId(kakaoId)
-                .oauthCode(KAKAO)
-                .userToken(issueUserToken())
-                .status(TEMP)
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-        userRepository.save(newUser);
+    public void login(UserDto userDto) {
+        Optional<User> optional = userRepository.findByUserToken(userDto.getCredentialToken());
 
-        return UserDto.builder()
-                .credentialToken(newUser.getUserToken())
-                .accessToken(newUser.getAccessToken())
-                .refreshToken(newUser.getRefreshToken())
-                .build();
+        if (optional.isEmpty()) {
+            log.error(ErrorInfo.INVALID_CREDENTIAL_TOKEN.getMessage());
+            throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
+        }
+        User user = optional.get();
+        user.updateLoginInfo(current.getClientIp(), userDto.getAccessToken(), userDto.getRefreshToken());
     }
 
     public UserDto join(UserDto userDto) {
@@ -94,15 +89,14 @@ public class UserService {
         }
         Long matchMakerId;
         try {
-             matchMakerId = Long.valueOf(rsaCrypto.decrypt(matchMakerCode));
-        }
-        catch(Exception e) {
+            matchMakerId = Long.valueOf(rsaCrypto.decrypt(matchMakerCode));
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new GlobalException(ErrorInfo.INVALID_MATCHMAKER_CODE);
         }
 
         Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findById(matchMakerId);
-        if (optionalMatchMaker.isEmpty()) {
+        if (optionalMatchMaker.isEmpty() || optionalMatchMaker.get().getStatus() != ACTIVE) {
             log.debug("입력한 코드로 주선자를 찾지 못했습니다. 코드를 다시 확인해주세요.");
             throw new GlobalException(ErrorInfo.MATCHMAKER_NOT_FOUND);
         }
@@ -110,18 +104,35 @@ public class UserService {
         /**
          * 임시유저 조회
          */
-        User newUser = query.selectFrom(user)
-                .where(user.userToken.eq(userDto.getCredentialToken())).fetchOne();
+        String decryptedOauthId = null;
 
-        if (newUser == null) {
-            log.error("임시 유저 생성이 되지 않았습니다. Authentication 요청부터 다시 진행해주세요.");
-            throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
+        try {
+            decryptedOauthId = rsaCrypto.decrypt(userDto.getOauthId());
+        }
+        catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new GlobalException(ErrorInfo.INVALID_OAUTH_ID);
         }
 
-        if (newUser.getStatus() != TEMP) {
-            log.error("이미 가입된 유저입니다.");
-            throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
+        if (!agreementService.agreeWithAllEssential(userDto.getOauthCode(), decryptedOauthId)) {
+            log.error(ErrorInfo.DO_NOT_AGREE.getMessage());
+            throw new GlobalException(ErrorInfo.DO_NOT_AGREE);
         }
+        Optional<User> user = userRepository.findByOauthCodeAndOauthId(userDto.getOauthCode(), decryptedOauthId);
+        if (user.isPresent()) {
+            log.error(ErrorInfo.REGISTERED_MEMBER.getMessage());
+            throw new GlobalException(ErrorInfo.REGISTERED_MEMBER);
+        }
+
+        User newUser = User.builder()
+                .accessToken(userDto.getAccessToken())
+                .refreshToken(userDto.getRefreshToken())
+                .userToken(commonUtil.issueMemberToken())
+                .oauthCode(userDto.getOauthCode())
+                .oauthId(decryptedOauthId)
+                .status(PROFILE_MAKING)
+                .build();
+        userRepository.save(newUser);
 
         /**
          * 유저와 주선자간 관계 생성
@@ -133,15 +144,13 @@ public class UserService {
                 .build();
         friendshipRepository.save(friendship);
 
-        /**
-         * 정식 가입 상태로 상태 변경
-         */
-        newUser.officiallySignedUp();
+        log.info("{}님 가입되었습니다.", newUser.getUserToken());
 
         return UserDto.builder()
                 .credentialToken(newUser.getUserToken())
                 .accessToken(newUser.getAccessToken())
                 .refreshToken(newUser.getRefreshToken())
+                .memberStatus(newUser.getStatus())
                 .build();
     }
 

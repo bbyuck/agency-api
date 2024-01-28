@@ -1,5 +1,6 @@
 package com.ndm.core.common.util;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -12,8 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
+@NoArgsConstructor
 public class RSACrypto {
 
+    public RSACrypto(String publicKey) {
+        this.publicKey = publicKey;
+    }
 
     @Value("${key.rsa.public}")
     public String publicKey;

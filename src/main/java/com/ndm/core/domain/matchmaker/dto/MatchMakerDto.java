@@ -1,6 +1,7 @@
 package com.ndm.core.domain.matchmaker.dto;
 
-import com.ndm.core.common.enums.MemberType;
+import com.ndm.core.common.enums.MemberStatus;
+import com.ndm.core.common.enums.MemberCode;
 import com.ndm.core.common.enums.OAuthCode;
 import lombok.*;
 
@@ -17,7 +18,13 @@ public class MatchMakerDto {
 
     private String refreshToken;
 
-    private final MemberType memberType = MemberType.MATCH_MAKER;
+    private final MemberCode memberCode = MemberCode.MATCH_MAKER;
 
+    private MemberStatus memberStatus;
+
+
+
+    private OAuthCode oauthCode;
+    private String oauthId;
 
 }
