@@ -1,6 +1,8 @@
 package com.ndm.core.domain.file.service;
 
 import com.ndm.core.domain.file.dto.FileInfoDto;
+import com.ndm.core.domain.file.dto.FileResponseDto;
+import com.ndm.core.domain.file.dto.PhotoData;
 import com.ndm.core.domain.file.repository.FileRepository;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.Photo;
@@ -8,6 +10,7 @@ import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,12 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import static com.ndm.core.entity.QPhoto.photo;
 
 @Slf4j
 @Service
@@ -32,13 +35,14 @@ public class FileService {
 
     private final UserRepository userRepository;
 
+    private final JPAQueryFactory query;
+
     private final Current current;
 
     @Value("${file.root}")
     private String fileRoot;
 
-    private String getTodayString() {
-        LocalDateTime now = LocalDateTime.now();
+    private String getTodayString(LocalDateTime now) {
         int year = now.getYear();
         int month = now.getMonthValue();
         int day = now.getDayOfMonth();
@@ -53,10 +57,10 @@ public class FileService {
         return sb.toString();
     }
 
-    private String getFilePath() {
+    private String getFilePath(LocalDateTime now) {
         StringBuilder sb = new StringBuilder();
-        sb.append(fileRoot).append("/").append(getTodayString()).append("/").append(current.getUserCredentialToken()).append("/");
-        
+        sb.append(fileRoot).append("/").append(getTodayString(now)).append("/").append(current.getUserCredentialToken()).append("/");
+
         return sb.toString();
     }
 
@@ -66,6 +70,8 @@ public class FileService {
     }
 
     public void upload(MultipartFile file) {
+        LocalDateTime now = LocalDateTime.now();
+
         if (file.getOriginalFilename() == null) {
             throw new GlobalException(ErrorInfo.FILE_UPLOAD);
         }
@@ -82,20 +88,11 @@ public class FileService {
         }
         User owner = optional.get();
 
-//        // 1. db 체크
         List<Photo> ownPhotoList = fileRepository.findByOwner(owner);
-//
-//        // 2. 물리파일 존재여부 체크
-//        for (Photo photo : ownPhotoList) {
-//            // 1. db에 존재하는데 물리파일이 없을 경우
-//            // 해당 파일로 갈아치운다
-//
-//
-//        }
 
+        String filePath = getFilePath(now);
 
-        String filePath = getFilePath();
-        String fullFilePath = filePath + "img_" + (ownPhotoList.size() + 1) + "." + getFileExtension(file.getOriginalFilename());
+        String fullFilePath = filePath + "img_" + now.getHour() + now.getMinute() + now.getSecond() + "." + getFileExtension(file.getOriginalFilename());
 
 
         writeFile(file, filePath, fullFilePath);
@@ -130,14 +127,63 @@ public class FileService {
             dir.mkdirs();
         }
 
-        try (FileOutputStream fos = new FileOutputStream(fullFilePath)){
+        try (FileOutputStream fos = new FileOutputStream(fullFilePath)) {
             byte[] bytes = file.getBytes();
 
             fos.write(bytes);
-        }
-        catch(IOException e) {
+        } catch (IOException e) {
             log.error(e.getMessage(), e);
             throw new GlobalException(ErrorInfo.FILE_UPLOAD);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public FileResponseDto getMyFileData() {
+        List<Photo> callersPhotoList = query
+                .select(photo)
+                .from(photo)
+                .where(photo.owner.userToken.eq(current.getUserCredentialToken()))
+                .fetch();
+
+        FileResponseDto fileResponseDto = new FileResponseDto();
+
+        callersPhotoList.forEach(photo -> {
+            try (FileInputStream fis = new FileInputStream(photo.getFilePath());
+                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                int length;
+
+                byte[] buffer = new byte[512];
+                while ((length = fis.read(buffer)) != -1) {
+                    bos.write(buffer, 0, length);
+                }
+
+                fileResponseDto.getPhotoDataList().add(new PhotoData(photo.getId(), bos.toByteArray()));
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+                throw new GlobalException(ErrorInfo.FILE_UPLOAD);
+            }
+        });
+
+        return fileResponseDto;
+    }
+
+    public FileResponseDto deleteFile(FileInfoDto fileInfoDto) {
+        Photo deleteTargetEntity = query
+                .select(photo)
+                .from(photo)
+                .where(
+                        photo.owner.userToken.eq(current.getUserCredentialToken())
+                                .and(photo.id.eq(fileInfoDto.getId())
+                                )
+                )
+                .fetchOne();
+
+        File deleteTarget = new File(deleteTargetEntity.getFilePath());
+        if (deleteTarget.exists()) {
+            deleteTarget.delete();
+        }
+        fileRepository.delete(deleteTargetEntity);
+
+        return getMyFileData();
     }
 }

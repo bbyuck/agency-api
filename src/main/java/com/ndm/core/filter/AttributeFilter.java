@@ -21,7 +21,7 @@ public class AttributeFilter extends OncePerRequestFilter {
         // TraceData attribute
         request.setAttribute(TRACE_DATA.name(), TraceData.builder().traceId(UUID.randomUUID().toString()).build());
 
-        System.out.println("request = " + request.getHeader(HeaderKey.X_Credential_Token.name()));
+        System.out.println("request = " + request.getHeader(HeaderKey.X_Credential_Token.key()));
         chain.doFilter(request, response);
     }
 }

@@ -5,9 +5,11 @@ import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
 import com.ndm.core.domain.agreement.service.AgreementService;
+import com.ndm.core.domain.file.service.FileService;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.user.dto.UserDto;
+import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.Friendship;
 import com.ndm.core.entity.MatchMaker;
@@ -15,6 +17,7 @@ import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
+import com.querydsl.core.NonUniqueResultException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +46,8 @@ public class UserService {
 
     private final AgreementService agreementService;
 
+    private final FileService fileService;
+
     private final RSACrypto rsaCrypto;
 
     private final Current current;
@@ -64,7 +69,7 @@ public class UserService {
                         .accessToken(result.getAccessToken())
                         .refreshToken(result.getRefreshToken())
                         .memberStatus(result.getStatus())
-                .build();
+                        .build();
     }
 
     public void login(UserDto userDto) {
@@ -108,8 +113,7 @@ public class UserService {
 
         try {
             decryptedOauthId = rsaCrypto.decrypt(userDto.getOauthId());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new GlobalException(ErrorInfo.INVALID_OAUTH_ID);
         }
@@ -152,6 +156,55 @@ public class UserService {
                 .refreshToken(newUser.getRefreshToken())
                 .memberStatus(newUser.getStatus())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileDto findCallersProfile() {
+        User caller;
+        try {
+            caller = query
+                    .select(user)
+                    .from(user)
+                    .where(user.userToken.eq(current.getUserCredentialToken())).fetchOne();
+        }
+        catch(NonUniqueResultException e) {
+            log.error(e.getMessage(), e);
+            throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
+        }
+        catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new GlobalException(ErrorInfo.INTERNAL_SERVER_ERROR);
+        }
+        if (caller == null) {
+            log.error("유저를 찾을 수 없습니다.");
+            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
+        }
+
+        return UserProfileDto.builder()
+                .gender(caller.getGender())
+                .age(caller.getAge())
+                .address(caller.getAddress())
+                .height(caller.getHeight())
+                .idealType(caller.getIdealType())
+                .hobby(caller.getHobby())
+                .mbti(caller.getMbti())
+                .smoking(caller.isSmoking())
+                .selfDescription(caller.getSelfDescription())
+                .photoData(fileService.getMyFileData())
+                .build();
+    }
+
+    public UserProfileDto saveCallersProfile(UserProfileDto userProfileDto) {
+        Optional<User> optional = userRepository.findByUserToken(current.getUserCredentialToken());
+        if (optional.isEmpty()) {
+            log.error(ErrorInfo.INVALID_CREDENTIAL_TOKEN.getMessage());
+            throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
+        }
+        User caller = optional.get();
+        log.info("mbti ====== {}", userProfileDto.getMbti());
+        caller.updateProfileInfo(userProfileDto);
+
+        return userProfileDto;
     }
 
 //    public UserDto idJoin(UserDto newUserDto) {

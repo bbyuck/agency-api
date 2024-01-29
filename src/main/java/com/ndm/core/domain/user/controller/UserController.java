@@ -1,6 +1,7 @@
 package com.ndm.core.domain.user.controller;
 
 import com.ndm.core.domain.user.dto.UserDto;
+import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.service.UserService;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +43,21 @@ public class UserController {
                 .build();
     }
 
+    @Trace
+    @GetMapping("/user/profile/my")
+    public Response<UserProfileDto> findMyProfile() {
+        return Response.<UserProfileDto>builder()
+                .data(userService.findCallersProfile())
+                .build();
+    }
+
+    @Trace
+    @PostMapping("/user/profile/my")
+    public Response<UserProfileDto> saveMyProfile(@RequestBody UserProfileDto userProfileDto) {
+        return Response.<UserProfileDto>builder()
+                .data(userService.saveCallersProfile(userProfileDto))
+                .build();
+    }
 
 
 }

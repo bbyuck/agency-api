@@ -5,6 +5,7 @@ import com.ndm.core.common.enums.Gender;
 import com.ndm.core.common.enums.MBTI;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.enums.MemberStatus;
+import com.ndm.core.domain.user.dto.UserProfileDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -51,6 +52,9 @@ public class User extends BaseEntity {
 
     @Column(name = "height")
     private Integer height;
+
+    @Column(name = "job", length = 40)
+    private String job;
 
     @Column(name = "ideal_type", length = 400)
     private String idealType;
@@ -102,5 +106,18 @@ public class User extends BaseEntity {
 
     public void changeUserStatus(MemberStatus memberStatus) {
         this.status = memberStatus;
+    }
+
+    public void updateProfileInfo(UserProfileDto userProfileDto) {
+        this.gender = userProfileDto.getGender();
+        this.age = userProfileDto.getAge();
+        this.job = userProfileDto.getJob();
+        this.address = userProfileDto.getAddress();
+        this.height = userProfileDto.getHeight();
+        this.idealType = userProfileDto.getIdealType();
+        this.hobby = userProfileDto.getHobby();
+        this.mbti = userProfileDto.getMbti();
+        this.smoking = userProfileDto.isSmoking();
+        this.selfDescription = userProfileDto.getSelfDescription();
     }
 }

@@ -55,6 +55,7 @@ public enum ErrorInfo {
 
     // ==================== 파일 관련 exception ========================
     FILE_UPLOAD(500, "FILE_UPLOAD", "파일 업로드 중 에러가 발생했습니다.\n관리자에게 문의해주세요."),
+    FILE_GET(500, "FILE_GET", "파일을 가져오는 중 에러가 발생했습니다.\n관리자에게 문의해주세요."),
     NOT_SUPPORTED_FILE_EXTENSION(400, "NOT_SUPPORTED_FILE_EXTENSION", "지원하지 않는 파일 확장자입니다.");
     ;
 

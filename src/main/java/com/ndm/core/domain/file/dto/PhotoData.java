@@ -2,12 +2,10 @@ package com.ndm.core.domain.file.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class FileInfoDto {
+public class PhotoData {
     private Long id;
-
+    private byte[] physicalData;
 }
