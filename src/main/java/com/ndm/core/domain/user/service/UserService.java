@@ -28,7 +28,9 @@ import org.springframework.util.StringUtils;
 import java.util.Optional;
 
 import static com.ndm.core.common.enums.MemberStatus.*;
+import static com.ndm.core.entity.QPhoto.photo;
 import static com.ndm.core.entity.QUser.user;
+import static com.ndm.core.model.ErrorInfo.*;
 
 @Slf4j
 @Service
@@ -53,6 +55,7 @@ public class UserService {
     private final Current current;
 
     private final CommonUtil commonUtil;
+
 
     @Transactional(readOnly = true)
     public UserDto findUserByOAuth(String oauthId, OAuthCode oAuthCode) {
@@ -183,6 +186,7 @@ public class UserService {
         return UserProfileDto.builder()
                 .gender(caller.getGender())
                 .age(caller.getAge())
+                .job(caller.getJob())
                 .address(caller.getAddress())
                 .height(caller.getHeight())
                 .idealType(caller.getIdealType())
@@ -206,6 +210,51 @@ public class UserService {
 
         return userProfileDto;
     }
+
+    public UserDto registerProfile(UserProfileDto userProfileDto) {
+        if (userProfileDto.getGender() == null) {
+            throw new GlobalException(GENDER_EMPTY);
+        }
+        if (!StringUtils.hasText(userProfileDto.getAge())) {
+            throw new GlobalException(AGE_EMPTY);
+        }
+        if (!StringUtils.hasText(userProfileDto.getAddress())) {
+            throw new GlobalException(ADDRESS_EMPTY);
+        }
+        if (!StringUtils.hasText(userProfileDto.getJob())) {
+            throw new GlobalException(JOB_EMPTY);
+        }
+        if (userProfileDto.getHeight() == null) {
+            throw new GlobalException(HEIGHT_EMPTY);
+        }
+        if (!StringUtils.hasText(userProfileDto.getHobby())) {
+            throw new GlobalException(HOBBY_EMPTY);
+        }
+        if (userProfileDto.getMbti() == null) {
+            throw new GlobalException(MBTI_EMPTY);
+        }
+        if (!StringUtils.hasText(userProfileDto.getIdealType())) {
+            throw new GlobalException(IDEAL_TYPE_EMPTY);
+        }
+        if (!StringUtils.hasText(userProfileDto.getSelfDescription())) {
+            throw new GlobalException(SELF_DESCRIPTION_EMPTY);
+        }
+
+        User profileOwner = query.select(user)
+                .from(user).leftJoin(user.photos, photo)
+                .fetchJoin()
+                .where(user.userToken.eq(current.getUserCredentialToken())).fetchOne();
+        if (profileOwner.getPhotos().size() < 2 || profileOwner.getPhotos().size() > 5) {
+            throw new GlobalException(PHOTO_INVALID_SIZE);
+        }
+        profileOwner.registerProfile(userProfileDto);
+
+
+        return UserDto.builder()
+                .memberStatus(NEW)
+                .build();
+    }
+
 
 //    public UserDto idJoin(UserDto newUserDto) {
 //        /**

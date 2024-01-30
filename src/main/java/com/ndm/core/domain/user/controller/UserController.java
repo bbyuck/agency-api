@@ -59,5 +59,12 @@ public class UserController {
                 .build();
     }
 
+    @Trace
+    @PostMapping("/user/profile/new")
+    public Response<UserDto> registerProfile(@RequestBody UserProfileDto userProfileDto) {
+        return Response.<UserDto>builder()
+                .data(userService.registerProfile(userProfileDto))
+                .build();
+    }
 
 }

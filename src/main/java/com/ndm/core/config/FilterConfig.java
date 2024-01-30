@@ -21,6 +21,7 @@ public class FilterConfig {
     private final String[] ALLOWED_HEADER = {
             // 기본 헤더
             "Origin", "X-Requested-with", "Accept", "Authorization", "Content-Type", "Credential-Token", "Access-Token", "Refresh-Token",
+            "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers",
             // 커스텀 헤더
             "X-Credential-Token"
     };

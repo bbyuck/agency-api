@@ -54,9 +54,25 @@ public enum ErrorInfo {
     AGREEMENT_NOT_FOUND(500, "AGREEMENT_NOT_FOUND", "동의서를 찾지 못했습니다.\n관리자에게 문의해주세요."),
 
     // ==================== 파일 관련 exception ========================
-    FILE_UPLOAD(500, "FILE_UPLOAD", "파일 업로드 중 에러가 발생했습니다.\n관리자에게 문의해주세요."),
-    FILE_GET(500, "FILE_GET", "파일을 가져오는 중 에러가 발생했습니다.\n관리자에게 문의해주세요."),
-    NOT_SUPPORTED_FILE_EXTENSION(400, "NOT_SUPPORTED_FILE_EXTENSION", "지원하지 않는 파일 확장자입니다.");
+    FILE_UPLOAD(500, "FILE_UPLOAD", "파일 업로드 중 문제가 발생했습니다.\n관리자에게 문의해주세요."),
+    FILE_GET(500, "FILE_GET", "파일을 가져오는 중 문제가 발생했습니다.\n관리자에게 문의해주세요."),
+    NOT_SUPPORTED_FILE_EXTENSION(400, "NOT_SUPPORTED_FILE_EXTENSION", "지원하지 않는 파일 확장자입니다."),
+
+    // ==================== 프로필 만들기 관련 exception ==================
+    GENDER_EMPTY(400, "GENDER_EMPTY", "성별이 입력되지 않았습니다."),
+    AGE_EMPTY(400, "AGE_EMPTY", "나이가 입력되지 않았습니다."),
+    ADDRESS_EMPTY(400, "ADDRESS_EMPTY", "사는 곳이 입력되지 않았습니다."),
+    JOB_EMPTY(400, "JOB_EMPTY", "어떤 일을 하는지 입력되지 않았습니다."),
+    HEIGHT_EMPTY(400, "HEIGHT_EMPTY", "키가 입력되지 않았습니다."),
+    HOBBY_EMPTY(400, "HOBBY_EMPTY", "취미가 입력되지 않았습니다."),
+    MBTI_EMPTY(400, "MBTI_EMPTY", "MBTI가 입력되지 않았습니다."),
+    IDEAL_TYPE_EMPTY(400, "IDEAL_TYPE_EMPTY", "원하는 이성상이 입력되지 않았습니다."),
+    SELF_DESCRIPTION_EMPTY(400, "SELF_DESCRIPTION_EMPTY", "자기소개가 입력되지 않았습니다."),
+    PHOTO_INVALID_SIZE(500, "PHOTO_COUNT", "사진이 2장 이상, 5장 이하로 업로드 되지 않았습니다."),
+    SMOKING_EMPTY(400, "SMOKING_EMPTY", "흡연 여부가 입력되지 않았습니다.")
+
+
+
     ;
 
 

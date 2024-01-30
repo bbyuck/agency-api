@@ -120,4 +120,9 @@ public class User extends BaseEntity {
         this.smoking = userProfileDto.isSmoking();
         this.selfDescription = userProfileDto.getSelfDescription();
     }
+
+    public void registerProfile(UserProfileDto userProfileDto) {
+        updateProfileInfo(userProfileDto);
+        this.status = NEW;
+    }
 }
