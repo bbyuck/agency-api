@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static com.ndm.core.entity.QMatchMaker.matchMaker;
@@ -164,8 +166,8 @@ public class MatchMakerService {
     }
 
     @Transactional(readOnly = true)
-    public String getCode(MatchMakerDto matchMakerDto) {
-        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findByMatchMakerToken(matchMakerDto.getCredentialToken());
+    public String getCode() {
+        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findByMatchMakerToken(current.getMemberCredentialToken());
 
         if (optionalMatchMaker.isEmpty()) {
             throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
@@ -181,8 +183,8 @@ public class MatchMakerService {
     }
 
     @Transactional(readOnly = true)
-    public String getUriWithCode(MatchMakerDto matchMakerDto) {
-        String code = getCode(matchMakerDto);
+    public String getUriWithCode() {
+        String code = URLEncoder.encode(getCode(), StandardCharsets.UTF_8);
 
         return clientLocation + "?matchmaker=" + code;
     }

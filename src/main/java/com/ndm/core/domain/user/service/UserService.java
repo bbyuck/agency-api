@@ -168,7 +168,7 @@ public class UserService {
             caller = query
                     .select(user)
                     .from(user)
-                    .where(user.userToken.eq(current.getUserCredentialToken())).fetchOne();
+                    .where(user.userToken.eq(current.getMemberCredentialToken())).fetchOne();
         }
         catch(NonUniqueResultException e) {
             log.error(e.getMessage(), e);
@@ -199,7 +199,7 @@ public class UserService {
     }
 
     public UserProfileDto saveCallersProfile(UserProfileDto userProfileDto) {
-        Optional<User> optional = userRepository.findByUserToken(current.getUserCredentialToken());
+        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
         if (optional.isEmpty()) {
             log.error(ErrorInfo.INVALID_CREDENTIAL_TOKEN.getMessage());
             throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
@@ -243,7 +243,7 @@ public class UserService {
         User profileOwner = query.select(user)
                 .from(user).leftJoin(user.photos, photo)
                 .fetchJoin()
-                .where(user.userToken.eq(current.getUserCredentialToken())).fetchOne();
+                .where(user.userToken.eq(current.getMemberCredentialToken())).fetchOne();
         if (profileOwner.getPhotos().size() < 2 || profileOwner.getPhotos().size() > 5) {
             throw new GlobalException(PHOTO_INVALID_SIZE);
         }

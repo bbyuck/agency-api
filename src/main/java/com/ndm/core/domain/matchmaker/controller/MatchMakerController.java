@@ -46,9 +46,9 @@ public class MatchMakerController {
             @ApiResponse(responseCode = "500", description = "회원 가입 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
-    public Response<String> getCode(MatchMakerDto matchMakerDto) {
+    public Response<String> getCode() {
         return Response.<String>builder()
-                .data(matchMakerService.getUriWithCode(matchMakerDto))
+                .data(matchMakerService.getUriWithCode())
                 .build();
     }
 }

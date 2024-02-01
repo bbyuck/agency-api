@@ -66,13 +66,13 @@ public class FileService {
 
     private String getFilePath(LocalDateTime now) {
         StringBuilder sb = new StringBuilder();
-        sb.append(fileRoot).append("/").append(getTodayString(now)).append("/").append(current.getUserCredentialToken()).append("/");
+        sb.append(fileRoot).append("/").append(getTodayString(now)).append("/").append(current.getMemberCredentialToken()).append("/");
 
         return sb.toString();
     }
     private String getCompressedFilePath(LocalDateTime now) {
         StringBuilder sb = new StringBuilder();
-        sb.append(fileRoot).append("/").append(getTodayString(now)).append("/").append(current.getUserCredentialToken()).append("/comp/");
+        sb.append(fileRoot).append("/").append(getTodayString(now)).append("/").append(current.getMemberCredentialToken()).append("/comp/");
         return sb.toString();
     }
 
@@ -93,7 +93,7 @@ public class FileService {
             throw new GlobalException(ErrorInfo.NOT_SUPPORTED_FILE_EXTENSION);
         }
 
-        Optional<User> optional = userRepository.findByUserToken(current.getUserCredentialToken());
+        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
         if (optional.isEmpty()) {
             log.error("잘못된 유저 credential token입니다.");
             throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
@@ -157,7 +157,7 @@ public class FileService {
         List<Photo> callersPhotoList = query
                 .select(photo)
                 .from(photo)
-                .where(photo.owner.userToken.eq(current.getUserCredentialToken()))
+                .where(photo.owner.userToken.eq(current.getMemberCredentialToken()))
                 .fetch();
 
         FileResponseDto fileResponseDto = new FileResponseDto();
@@ -248,7 +248,7 @@ public class FileService {
                 .select(photo)
                 .from(photo)
                 .where(
-                        photo.owner.userToken.eq(current.getUserCredentialToken())
+                        photo.owner.userToken.eq(current.getMemberCredentialToken())
                                 .and(photo.id.eq(fileInfoDto.getId())
                                 )
                 )

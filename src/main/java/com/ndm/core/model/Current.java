@@ -15,7 +15,7 @@ public class Current {
         return request.getHeader(HeaderKey.X_LOGIN_ID.key());
     }
 
-    public String getUserCredentialToken() {
+    public String getMemberCredentialToken() {
         return request.getHeader(HeaderKey.X_Credential_Token.key());
     }
 
