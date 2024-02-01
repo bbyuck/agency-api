@@ -258,6 +258,12 @@ public class FileService {
         if (deleteTarget.exists()) {
             deleteTarget.delete();
         }
+        File compressedDeleteTarget = new File(getCompressedFilePath(deleteTargetEntity.getFilePath()));
+
+        if (compressedDeleteTarget.exists()) {
+            compressedDeleteTarget.delete();
+        }
+
         fileRepository.delete(deleteTargetEntity);
 
         return getMyFileData();

@@ -194,7 +194,6 @@ public class UserService {
                 .mbti(caller.getMbti())
                 .smoking(caller.isSmoking())
                 .selfDescription(caller.getSelfDescription())
-                .photoData(fileService.getMyFileData())
                 .build();
     }
 
