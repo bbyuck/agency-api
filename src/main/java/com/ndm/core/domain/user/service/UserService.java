@@ -9,6 +9,7 @@ import com.ndm.core.domain.file.service.FileService;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.user.dto.UserDto;
+import com.ndm.core.domain.user.dto.UserInfoDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.Friendship;
@@ -250,10 +251,23 @@ public class UserService {
 
 
         return UserDto.builder()
-                .memberStatus(NEW)
+                .memberStatus(profileOwner.getStatus())
                 .build();
     }
 
+
+    @Transactional(readOnly = true)
+    public UserDto findCaller() {
+        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        if (optional.isEmpty()) {
+            log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
+            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
+        }
+        User caller = optional.get();
+        return UserDto.builder()
+                .memberStatus(caller.getStatus())
+                .build();
+    }
 
 //    public UserDto idJoin(UserDto newUserDto) {
 //        /**

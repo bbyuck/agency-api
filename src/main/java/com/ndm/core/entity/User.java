@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.ndm.core.common.enums.MemberStatus.NEW;
+import static com.ndm.core.common.enums.MemberStatus.WAIT;
 
 @Entity
 @Getter
@@ -123,6 +124,6 @@ public class User extends BaseEntity {
 
     public void registerProfile(UserProfileDto userProfileDto) {
         updateProfileInfo(userProfileDto);
-        this.status = NEW;
+        this.status = WAIT;
     }
 }

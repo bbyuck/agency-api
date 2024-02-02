@@ -9,6 +9,7 @@ import com.ndm.core.domain.agreement.dto.TempMemberDto;
 import com.ndm.core.domain.agreement.repository.AgreementRepository;
 import com.ndm.core.entity.Agreement;
 import com.ndm.core.model.ErrorInfo;
+import com.ndm.core.model.Trace;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -98,7 +99,31 @@ public class AgreementService {
         });
     }
 
+    @Transactional(readOnly = true)
     public boolean agreeWithAllEssential(OAuthCode oauthCode, String decryptedOauthId) {
+        List<Agreement> result =
+                query.selectFrom(agreement).distinct()
+                        .where(agreement.code.in(Agreement.ESSENTIAL_LIST)
+                                .and(agreement.agree.eq(true))
+                                .and(agreement.oauthId.eq(decryptedOauthId))
+                                .and(agreement.oauthCode.eq(oauthCode))).fetch();
+        return result.size() == Agreement.ESSENTIAL_LIST.size();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean agreeWithAllEssential(AgreementDto agreementDto) {
+        OAuthCode oauthCode = agreementDto.getOauthCode();
+        String decryptedOauthId;
+
+        try {
+            decryptedOauthId = rsaCrypto.decrypt(agreementDto.getOauthId());
+        }
+        catch(Exception e) {
+            log.error("oauth id 복호화에 실패했습니다.");
+            log.error(e.getMessage(), e);
+            throw new GlobalException(ErrorInfo.INTERNAL_SERVER_ERROR);
+        }
+
         List<Agreement> result =
                 query.selectFrom(agreement).distinct()
                         .where(agreement.code.in(Agreement.ESSENTIAL_LIST)
@@ -114,4 +139,23 @@ public class AgreementService {
             throw new GlobalException(ErrorInfo.INVALID_OAUTH_ID);
         }
     }
+
+//    @Transactional(readOnly = true)
+//    public AgreementDto findCallersAgreement(AgreementDto agreementDto) {
+//        checkUserAuth(agreementDto);
+//        Optional<Agreement> optional;
+//        try {
+//            optional = agreementRepository.findByOauthCodeAndOauthId(agreementDto.getOauthCode(), rsaCrypto.decrypt(agreementDto.getOauthId()));
+//        }
+//        catch (Exception e) {
+//            log.error(ErrorInfo.INTERNAL_SERVER_ERROR.getMessage());
+//            throw new GlobalException(ErrorInfo.INTERNAL_SERVER_ERROR);
+//        }
+//        if (optional.isEmpty()) {
+//            log.error("생성된 동의서가 없습니다.");
+//            throw new GlobalException(ErrorInfo.INTERNAL_SERVER_ERROR);
+//        }
+//
+//        Agreement callersAgreement = optional.get();
+//    }
 }

@@ -7,8 +7,10 @@ import com.ndm.core.common.util.RSACrypto;
 import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
+import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.MatchMaker;
+import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -91,8 +93,8 @@ public class MatchMakerService {
                 ).fetchOne();
 
         if (findMatchMaker != null) {
-            log.error("이미 가입된 주선자입니다.");
-            throw new GlobalException(INVALID_OAUTH_ID);
+            log.error(MEMBER_ALREADY_EXIST.getMessage());
+            throw new GlobalException(MEMBER_ALREADY_EXIST);
         }
         // 필수 동의서 모두 동의되어있는지 확인
         if (!agreementService.agreeWithAllEssential(OAuthCode.KAKAO, decryptedOauthId)) {
@@ -107,7 +109,7 @@ public class MatchMakerService {
                 .accessToken(newMatchMakerDto.getAccessToken())
                 .refreshToken(newMatchMakerDto.getRefreshToken())
                 .lastLoginIp(current.getClientIp())
-                .status(MemberStatus.NEW)
+                .status(MemberStatus.WAIT)
                 .build();
         matchMakerRepository.save(newMatchMaker);
 
@@ -187,5 +189,18 @@ public class MatchMakerService {
         String code = URLEncoder.encode(getCode(), StandardCharsets.UTF_8);
 
         return clientLocation + "?matchmaker=" + code;
+    }
+
+    @Transactional(readOnly = true)
+    public MatchMakerDto findCaller() {
+        Optional<MatchMaker> optional = matchMakerRepository.findByMatchMakerToken(current.getMemberCredentialToken());
+        if (optional.isEmpty()) {
+            log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
+            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
+        }
+        MatchMaker caller = optional.get();
+        return MatchMakerDto.builder()
+                .memberStatus(caller.getStatus())
+                .build();
     }
 }

@@ -2,7 +2,9 @@ package com.ndm.core.domain.matchmaker.controller;
 
 
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
+import com.ndm.core.domain.matchmaker.dto.MatchMakerInfoDto;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;
+import com.ndm.core.domain.user.dto.UserInfoDto;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
 import com.ndm.core.model.TraceData;
@@ -49,6 +51,23 @@ public class MatchMakerController {
     public Response<String> getCode() {
         return Response.<String>builder()
                 .data(matchMakerService.getUriWithCode())
+                .build();
+    }
+
+    @Trace
+    @GetMapping("/matchmaker/info/my")
+    @Operation(summary = "요청자의 유저 정보 조회", description = "요청자의 유저 정보 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = UserInfoDto.class))),
+            @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<MatchMakerInfoDto> getMyInfo() {
+        return Response.<MatchMakerInfoDto>builder()
+                .data(MatchMakerInfoDto.builder()
+                        .matchMakerDto(matchMakerService.findCaller())
+                        .build())
                 .build();
     }
 }

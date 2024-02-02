@@ -1,6 +1,7 @@
 package com.ndm.core.domain.user.controller;
 
 import com.ndm.core.domain.user.dto.UserDto;
+import com.ndm.core.domain.user.dto.UserInfoDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.service.UserService;
 import com.ndm.core.model.Response;
@@ -14,10 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @V1
 @Slf4j
@@ -33,7 +31,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "SUCCESS"
                     , content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "500", description = "회원 가입 실패 - 사유 코드 참조"
+            @ApiResponse(responseCode = "500", description = "user 정보 저장 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
     public Response<UserDto> join(@RequestBody UserDto userDto) {
@@ -45,6 +43,13 @@ public class UserController {
 
     @Trace
     @GetMapping("/user/profile/my")
+    @Operation(summary = "요청자의 프로필 정보 조회", description = "요청자의 프로필 정보 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
+            @ApiResponse(responseCode = "500", description = "프로필 정보 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
     public Response<UserProfileDto> findMyProfile() {
         return Response.<UserProfileDto>builder()
                 .data(userService.findCallersProfile())
@@ -53,6 +58,13 @@ public class UserController {
 
     @Trace
     @PostMapping("/user/profile/my")
+    @Operation(summary = "요청자의 프로필 정보 저장", description = "요청자의 프로필 정보 저장")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
+            @ApiResponse(responseCode = "500", description = "프로필 정보 저장 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
     public Response<UserProfileDto> saveMyProfile(@RequestBody UserProfileDto userProfileDto) {
         return Response.<UserProfileDto>builder()
                 .data(userService.saveCallersProfile(userProfileDto))
@@ -61,10 +73,34 @@ public class UserController {
 
     @Trace
     @PostMapping("/user/profile/new")
+    @Operation(summary = "요청자의 프로필 정보 등록", description = "요청자의 프로필 정보 등록")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
+            @ApiResponse(responseCode = "500", description = "프로필 정보 저장 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
     public Response<UserDto> registerProfile(@RequestBody UserProfileDto userProfileDto) {
         return Response.<UserDto>builder()
                 .data(userService.registerProfile(userProfileDto))
                 .build();
     }
 
+    @Trace
+    @GetMapping("/user/info/my")
+    @Operation(summary = "요청자의 유저 정보 조회", description = "요청자의 유저 정보 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = UserInfoDto.class))),
+            @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<UserInfoDto> getMyInfo() {
+        return Response.<UserInfoDto>builder()
+                .data(UserInfoDto.builder()
+                        .userDto(userService.findCaller())
+                        .userProfileDto(userService.findCallersProfile())
+                        .build())
+                .build();
+    }
 }

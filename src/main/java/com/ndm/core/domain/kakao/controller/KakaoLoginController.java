@@ -26,6 +26,22 @@ public class KakaoLoginController {
 
     private final KakaoLoginService kakaoLoginService;
 
+    @Trace
+    @PostMapping("/kakao/authentication")
+    @Operation(summary = "Kakao oauth token 요청", description = "Kakao oauth token 발급을 요청")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"
+                    , description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = KakaoLoginDto.class))),
+            @ApiResponse(responseCode = "500", description = "Kakao authentication 실패"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<KakaoLoginDto> kakaoAuthentication(@RequestBody KakaoLoginDto requestDto) {
+        return Response
+                .<KakaoLoginDto>builder()
+                .data(kakaoLoginService.authentication(requestDto))
+                .build();
+    }
 
     @Trace
     @PostMapping("/kakao/login")
@@ -33,7 +49,7 @@ public class KakaoLoginController {
     @ApiResponses({
             @ApiResponse(responseCode = "200"
                     , description = "SUCCESS"
-                    , content = @Content(schema = @Schema(implementation = String.class))),
+                    , content = @Content(schema = @Schema(implementation = KakaoLoginDto.class))),
             @ApiResponse(responseCode = "500", description = "Kakao Login 실패"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })

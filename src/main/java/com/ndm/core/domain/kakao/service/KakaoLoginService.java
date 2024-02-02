@@ -71,11 +71,11 @@ public class KakaoLoginService {
          * 1. oauth token 발급 요청
          * */
         log.info("request oauth token to kakao server with authorization code ====== {}", loginDto.getCode());
-        KakaoOAuthResponseDto kakaoOAuthResponseDto = requestOAuthToken(loginDto.getCode());
+        KakaoOAuthResponseDto kakaoOAuthResponseDto = requestOAuthToken(loginDto.getCode(), true);
         log.debug("result ===== {}", kakaoOAuthResponseDto);
-        log.debug("id token bytes ====== {}", kakaoOAuthResponseDto.getId_token().length());
-        log.debug("access token bytes ====== {}", kakaoOAuthResponseDto.getAccess_token().length());
-        log.debug("refresh token bytes ====== {}", kakaoOAuthResponseDto.getRefresh_token().length());
+        log.debug("id token ====== {}", kakaoOAuthResponseDto.getId_token());
+        log.debug("access token ====== {}", kakaoOAuthResponseDto.getAccess_token());
+        log.debug("refresh token ====== {}", kakaoOAuthResponseDto.getRefresh_token());
 
         Jws<Claims> jws = oidcHelper.getSignedOIDCTokenJws(kakaoOAuthResponseDto.getId_token());
         String subject = jws.getBody().getSubject();
@@ -188,7 +188,7 @@ public class KakaoLoginService {
 
 
 
-    private KakaoOAuthResponseDto requestOAuthToken(String authorizationCode) {
+    private KakaoOAuthResponseDto requestOAuthToken(String authorizationCode, boolean forLogin) {
         log.info("requestOAuthToken(authorizationCode) ====== {}", authorizationCode);
         if (authorizationCode == null || authorizationCode.isEmpty()) {
             // 카카오 authorization code가 없음
@@ -202,7 +202,7 @@ public class KakaoLoginService {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("grant_type", "authorization_code");
         requestBody.add("client_id", kakaoRestKey);
-        requestBody.add("redirect_uri", clientLocation + "/auth");
+        requestBody.add("redirect_uri", clientLocation + (forLogin ? "/login" : "") + "/auth");
         requestBody.add("code", authorizationCode);
         try {
             KakaoOAuthResponseDto kakaoOAuthResponseDto = restClient.post()
@@ -255,5 +255,30 @@ public class KakaoLoginService {
                 .header("Authorization", "Bearer" + " " + accessToken)
                 .retrieve()
                 .body(KakaoOAuthResponseDto.class);
+    }
+
+    public KakaoLoginDto authentication(KakaoLoginDto requestDto) {
+        /**
+         * 0. authorization code가 없을 경우
+         */
+        if (requestDto.getCode() == null || requestDto.getCode().isEmpty()) {
+            throw new InvalidAuthorizationCodeException();
+        }
+
+        /*
+         * 1. oauth token 발급 요청
+         * */
+        log.info("request oauth token to kakao server with authorization code ====== {}", requestDto.getCode());
+        KakaoOAuthResponseDto kakaoOAuthResponseDto = requestOAuthToken(requestDto.getCode(), false);
+        log.debug("result ===== {}", kakaoOAuthResponseDto);
+        log.debug("access token ====== {}", kakaoOAuthResponseDto.getAccess_token());
+        log.debug("refresh token ====== {}", kakaoOAuthResponseDto.getRefresh_token());
+
+
+        return KakaoLoginDto
+                .builder()
+                .accessToken(kakaoOAuthResponseDto.getAccess_token())
+                .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
+                .build();
     }
 }
