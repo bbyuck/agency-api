@@ -5,11 +5,9 @@ import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
 import com.ndm.core.domain.agreement.service.AgreementService;
-import com.ndm.core.domain.file.service.FileService;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.user.dto.UserDto;
-import com.ndm.core.domain.user.dto.UserInfoDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.Friendship;
@@ -28,7 +26,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
-import static com.ndm.core.common.enums.MemberStatus.*;
+import static com.ndm.core.common.enums.MemberStatus.ACTIVE;
+import static com.ndm.core.common.enums.MemberStatus.PROFILE_MAKING;
 import static com.ndm.core.entity.QPhoto.photo;
 import static com.ndm.core.entity.QUser.user;
 import static com.ndm.core.model.ErrorInfo.*;
@@ -48,8 +47,6 @@ public class UserService {
     private final FriendshipRepository friendshipRepository;
 
     private final AgreementService agreementService;
-
-    private final FileService fileService;
 
     private final RSACrypto rsaCrypto;
 
@@ -184,19 +181,9 @@ public class UserService {
             throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
         }
 
-        return UserProfileDto.builder()
-                .gender(caller.getGender())
-                .age(caller.getAge())
-                .job(caller.getJob())
-                .address(caller.getAddress())
-                .height(caller.getHeight())
-                .idealType(caller.getIdealType())
-                .hobby(caller.getHobby())
-                .mbti(caller.getMbti())
-                .smoking(caller.isSmoking())
-                .selfDescription(caller.getSelfDescription())
-                .build();
+        return caller.getUserProfileInfo();
     }
+
 
     public UserProfileDto saveCallersProfile(UserProfileDto userProfileDto) {
         Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());

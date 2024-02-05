@@ -3,15 +3,20 @@ package com.ndm.core.domain.user.dto;
 import com.ndm.core.common.enums.Gender;
 import com.ndm.core.common.enums.MBTI;
 import com.ndm.core.domain.file.dto.FileResponseDto;
-import com.ndm.core.domain.file.dto.PhotoData;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserProfileDto {
+
+    private boolean exist = true;
+
+    private Long id;
     private Gender gender;
     private String age;
     private String address;

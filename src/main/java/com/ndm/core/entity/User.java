@@ -6,6 +6,8 @@ import com.ndm.core.common.enums.MBTI;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.enums.MemberStatus;
 import com.ndm.core.domain.user.dto.UserProfileDto;
+import com.ndm.core.domain.user.dto.UserProfileDto;
+import com.ndm.core.domain.user.dto.UserProfileSummaryDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -125,5 +127,32 @@ public class User extends BaseEntity {
     public void registerProfile(UserProfileDto userProfileDto) {
         updateProfileInfo(userProfileDto);
         this.status = WAIT;
+    }
+    
+    public UserProfileDto getUserProfileInfo() {
+        return UserProfileDto.builder()
+                .id(getId())
+                .address(getAddress())
+                .smoking(isSmoking())
+                .mbti(getMbti())
+                .height(getHeight())
+                .age(getAge())
+                .hobby(getHobby())
+                .job(getJob())
+                .idealType(getIdealType())
+                .selfDescription(getSelfDescription())
+                .build();
+    }
+    
+    public UserProfileSummaryDto getUserProfileSummary() {
+        return UserProfileSummaryDto
+                .builder()
+                .id(getId())
+                .age(getAge())
+                .address(getAddress())
+                .job(getJob())
+                .height(getHeight())
+                .smoking(isSmoking())
+                .build();
     }
 }

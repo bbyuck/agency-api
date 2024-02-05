@@ -46,11 +46,11 @@ public class Matching extends BaseEntity {
     @Column(name = "request_date")
     private LocalDateTime requestDate;
 
-    @Column(name = "requested_by")
-    private Long requester_id;
+    @Column(name = "requester_id")
+    private Long requesterId;
 
-    @Column(name = "match_date")
-    private LocalDateTime matchDate;
+    @Column(name = "matching_date")
+    private LocalDateTime matchingDate;
 
     @Column(name = "step")
     private Integer step;

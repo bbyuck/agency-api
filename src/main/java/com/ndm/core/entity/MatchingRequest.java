@@ -22,7 +22,7 @@ public class MatchingRequest extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "matching_request_seq_generator")
-    @Column(name = "matching_reqeust_id")
+    @Column(name = "matching_request_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,4 +37,10 @@ public class MatchingRequest extends BaseEntity {
     @Column(name = "matching_request_status", length = 20)
     @Enumerated(EnumType.STRING)
     private MatchingRequestStatus status;
+
+
+    // ========= 유저 편의 메소드 ============
+    public void reject() {
+        this.status = MatchingRequestStatus.REJECTED;
+    }
 }

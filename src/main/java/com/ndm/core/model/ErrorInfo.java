@@ -71,10 +71,18 @@ public enum ErrorInfo {
     IDEAL_TYPE_EMPTY(400, "IDEAL_TYPE_EMPTY", "원하는 이성상이 입력되지 않았습니다."),
     SELF_DESCRIPTION_EMPTY(400, "SELF_DESCRIPTION_EMPTY", "자기소개가 입력되지 않았습니다."),
     PHOTO_INVALID_SIZE(500, "PHOTO_COUNT", "사진이 2장 이상, 5장 이하로 업로드 되지 않았습니다."),
-    SMOKING_EMPTY(400, "SMOKING_EMPTY", "흡연 여부가 입력되지 않았습니다.")
+    SMOKING_EMPTY(400, "SMOKING_EMPTY", "흡연 여부가 입력되지 않았습니다."),
 
+    // ==================== 공통 exception ===================
+    FORBIDDEN(403, "FORBIDDEN", "접근 권한이 없습니다."),
 
-
+    // =================== 매칭 관련 Exception ================
+    MATCH_REQUESTED_BEFORE(400, "MATCH_REQUESTED_BEFORE", "이미 서로 요청을 주고받은 이력이 있는 유저입니다."),
+    MATCHED_BEFORE(400, "MATCHED_BEFORE", "이미 서로 매칭된 이력이 있는 유저입니다."),
+    OPPONENT_NOT_FOUND(400, "OPPONENT_NOT_FOUND", "상대방을 찾을 수 없습니다."),
+    CANNOT_SEND_REQUEST_STATUS(400, "CANNOT_SEND_REQUEST_STATUS", "현재 요청을 보낼 수 없는 상태입니다."),
+    CANNOT_RECEIVE_REQUEST_STATUS(400, "INVALID_OPPONENT_STATUS", "상대방이 요청을 받을 수 있는 상태가 아닙니다."),
+    RECEIVED_REQUEST_NOT_FOUND(400, "RECEIVED_REUQEST_NOT_FOUND", "받은 요청이 없습니다.")
     ;
 
 

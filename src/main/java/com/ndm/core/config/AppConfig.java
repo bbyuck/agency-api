@@ -5,11 +5,15 @@ import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.JWKManager;
 import com.ndm.core.common.util.OIDCHelper;
 import com.ndm.core.common.util.RSACrypto;
+import com.ndm.core.model.WebSocketMemberSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.parser.JSONParser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Configuration
@@ -33,6 +37,11 @@ public class AppConfig {
     @Bean
     public JSONParser jsonParser() {
         return new JSONParser();
+    }
+
+    @Bean
+    public WebSocketMemberSession webSocketMemberSession() {
+        return new WebSocketMemberSession();
     }
 
 }
