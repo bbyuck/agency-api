@@ -1,11 +1,12 @@
 package com.ndm.core.domain.matching.service;
 
 import com.ndm.core.common.enums.MemberStatus;
-import com.ndm.core.common.enums.WebSocketMessageType;
 import com.ndm.core.common.util.WebSocketHandler;
 import com.ndm.core.domain.matching.dto.MatchingRequestDto;
 import com.ndm.core.domain.matching.dto.MatchingRequestResultDto;
 import com.ndm.core.domain.matching.repository.MatchingRequestRepository;
+import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
+import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.Matching;
@@ -26,16 +27,18 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static com.ndm.core.common.enums.Gender.M;
 import static com.ndm.core.common.enums.MatchingRequestStatus.ACTIVE;
-import static com.ndm.core.common.enums.WebSocketMessageType.*;
-import static com.ndm.core.common.enums.WebSocketMessageType.CONNECT;
+import static com.ndm.core.common.enums.MatchingRequestStatus.CONFIRMED;
+import static com.ndm.core.common.enums.WebSocketMessageType.REJECT_REQUEST;
+import static com.ndm.core.common.enums.WebSocketMessageType.SEND_REQUEST;
 import static com.ndm.core.entity.QMatching.matching;
 import static com.ndm.core.entity.QMatchingRequest.matchingRequest;
-import static com.ndm.core.entity.QUser.*;
 
 
 @Slf4j
@@ -81,6 +84,7 @@ public class MatchingService {
                                 .or((matchingRequest.sender.eq(receiver).and(matchingRequest.receiver.eq(sender))))
 
                 ).fetch();
+
         if (!matchingRequestLog.isEmpty()) {
             log.error(ErrorInfo.MATCH_REQUESTED_BEFORE.getMessage());
             throw new GlobalException(ErrorInfo.MATCH_REQUESTED_BEFORE);
@@ -122,8 +126,8 @@ public class MatchingService {
         /**
          * 4. 유저 상태 변경
          */
-        sender.changeUserStatus(MemberStatus.MATCHING);
-        receiver.changeUserStatus(MemberStatus.MATCHING);
+        sender.changeUserStatus(MemberStatus.MATCHING_WAIT);
+        receiver.changeUserStatus(MemberStatus.REQUEST_RECEIVED);
 
         /**
          * 5. websocket 세션 확인
@@ -144,37 +148,30 @@ public class MatchingService {
         }
 
         return MatchingRequestResultDto.builder()
-                .memberStatus(MemberStatus.MATCHING)
+                .memberStatus(sender.getStatus())
                 .build();
     }
 
-    @Transactional(readOnly = true)
-    public UserProfileDto getReceivedRequest() {
-        List<MatchingRequest> result = query.select(matchingRequest)
-                .from(matchingRequest)
-                .leftJoin(matchingRequest.receiver, new QUser("receiver"))
-                .fetchJoin()
-                .leftJoin(matchingRequest.sender, new QUser("sender"))
-                .fetchJoin()
-                .where(matchingRequest.receiver.userToken.eq(current.getMemberCredentialToken())
-                        .and(matchingRequest.status.eq(ACTIVE)))
-                .fetch();
-
-        if (result.isEmpty()) {
-            // 빈 프로필 리턴
-            return UserProfileDto.builder()
-                    .exist(false)
-                    .build();
-        }
-
-        MatchingRequest receivedRequest = result.get(0);
-        User sender = receivedRequest.getSender();
-
-
-        return sender.getUserProfileInfo();
+    public void confirmReceivedRequest() {
+        MatchingRequest receivedRequest = getReceivedRequest();
+        receivedRequest.confirm();
     }
 
-    public MatchingRequestResultDto rejectRequest() {
+
+
+    @Transactional(readOnly = true)
+    public UserProfileDto getReceivedRequestSender() {
+        MatchingRequest receivedRequest = getReceivedRequest();
+        User sender = receivedRequest.getSender();
+
+        UserProfileDto senderProfileInfo = sender.getUserProfileInfo();
+        senderProfileInfo.setMatchingRequestStatus(receivedRequest.getStatus());
+
+        return senderProfileInfo;
+    }
+
+    @Transactional(readOnly = true)
+    public MatchingRequest getReceivedRequest() {
         List<MatchingRequest> result = query.select(matchingRequest)
                 .from(matchingRequest)
                 .join(matchingRequest.receiver, new QUser("receiver"))
@@ -182,13 +179,19 @@ public class MatchingService {
                 .join(matchingRequest.sender, new QUser("sender"))
                 .fetchJoin()
                 .where(matchingRequest.receiver.userToken.eq(current.getMemberCredentialToken())
-                        .and(matchingRequest.status.eq(ACTIVE))).fetch();
+                        .and(matchingRequest.status.in(Arrays.asList(ACTIVE, CONFIRMED))))
+                .fetch();
 
         if (result.isEmpty()) {
             log.error(ErrorInfo.RECEIVED_REQUEST_NOT_FOUND.getMessage());
             throw new GlobalException(ErrorInfo.RECEIVED_REQUEST_NOT_FOUND);
         }
         MatchingRequest receivedRequest = result.get(0);
+        return receivedRequest;
+    }
+
+    public MatchingRequestResultDto rejectRequest() {
+        MatchingRequest receivedRequest = getReceivedRequest();
 
         User sender = receivedRequest.getSender();
         User receiver = receivedRequest.getReceiver();
@@ -222,7 +225,33 @@ public class MatchingService {
         }
 
         return MatchingRequestResultDto.builder()
-                .memberStatus(MemberStatus.ACTIVE)
+                .memberStatus(sender.getStatus())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public Long findTodayRequestCount() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime tomorrow = now.plusDays(1);
+
+        LocalDateTime lastMidnight = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 0, 0, 0);
+        LocalDateTime thisMidnight = LocalDateTime.of(tomorrow.getYear(), tomorrow.getMonth(), tomorrow.getDayOfMonth(), 0, 0, 0);
+
+        return query.select(matchingRequest.count())
+                .from(matchingRequest)
+                .where(
+                        matchingRequest.sender.userToken.eq(current.getMemberCredentialToken())
+                                .and(matchingRequest.createdDate.between(lastMidnight, thisMidnight))
+                )
+                .fetchOne();
+    }
+
+    @Transactional(readOnly = true)
+    public MatchingRequestRemainDto findMatchingRequestRemain() {
+        return MatchingRequestRemainDto.builder()
+                .searched(true)
+                .currentCount(findTodayRequestCount())
+                .maxCount(2L)
                 .build();
     }
 

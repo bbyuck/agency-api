@@ -2,6 +2,7 @@ package com.ndm.core.domain.user.dto;
 
 import com.ndm.core.common.enums.Gender;
 import com.ndm.core.common.enums.MBTI;
+import com.ndm.core.common.enums.MatchingRequestStatus;
 import com.ndm.core.domain.file.dto.FileResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,8 @@ import lombok.NoArgsConstructor;
 public class UserProfileDto {
 
     private boolean exist = true;
+
+    private MatchingRequestStatus matchingRequestStatus;
 
     private Long id;
     private Gender gender;

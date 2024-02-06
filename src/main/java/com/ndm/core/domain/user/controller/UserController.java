@@ -1,5 +1,6 @@
 package com.ndm.core.domain.user.controller;
 
+import com.ndm.core.domain.matching.service.MatchingService;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserInfoDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
@@ -24,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    private final MatchingService matchingService;
 
     @Trace
     @PostMapping("/user/join")
@@ -100,6 +103,7 @@ public class UserController {
                 .data(UserInfoDto.builder()
                         .userDto(userService.findCaller())
                         .userProfileDto(userService.findCallersProfile())
+                        .matchingRequestRemainDto(matchingService.findMatchingRequestRemain())
                         .build())
                 .build();
     }

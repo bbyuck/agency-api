@@ -1,10 +1,14 @@
 package com.ndm.core.domain.user.service;
 
 import com.ndm.core.common.enums.MemberStatus;
+import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.dto.UserProfileSummaryDto;
 import com.ndm.core.domain.user.repository.UserRepository;
-import com.ndm.core.entity.*;
+import com.ndm.core.entity.Friendship;
+import com.ndm.core.entity.MatchMaker;
+import com.ndm.core.entity.QUser;
+import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -13,12 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.ndm.core.entity.QFriendship.friendship;
-import static com.ndm.core.entity.QMatchMaker.*;
-import static com.ndm.core.entity.QUser.*;
+import static com.ndm.core.entity.QMatchMaker.matchMaker;
+import static com.ndm.core.entity.QMatchingRequest.matchingRequest;
+import static com.ndm.core.entity.QUser.user;
 import static com.ndm.core.model.ErrorInfo.*;
 
 @Slf4j
@@ -34,8 +40,6 @@ public class ProfileService {
 
     private final Current current;
 
-
-
     @Transactional(readOnly = true)
     public List<UserProfileSummaryDto> findMatchingCandidate() {
         List<Friendship> callersFriendships = getCallersFriendship();
@@ -43,16 +47,45 @@ public class ProfileService {
         MatchMaker callersMatchMaker = callersFriendships.get(0).getMatchMaker();
         User caller = callersFriendships.get(0).getUser();
 
+
+        QUser qSender = new QUser("sender");
+        QUser qReceiver = new QUser("receiver");
+
+        /**
+         * 이전에 caller와 요청을 주고 받은 사이의 유저들
+         */
+        List<User> requestedList = query.select(matchingRequest)
+                .from(matchingRequest)
+                .join(matchingRequest.sender, qSender)
+                .fetchJoin()
+                .join(matchingRequest.receiver, qReceiver)
+                .fetchJoin()
+                .where(
+                        matchingRequest.sender.eq(caller)
+                                .or(matchingRequest.receiver.eq(caller))
+                )
+                .fetch()
+                .stream().map(matchingRequestEntity -> {
+                    if (matchingRequestEntity.getSender() == caller) {
+                        return matchingRequestEntity.getReceiver();
+                    } else {
+                        return matchingRequestEntity.getSender();
+                    }
+                }).toList();
+
+
         List<Friendship> candidateFriendShips = query.select(friendship)
                 .from(friendship)
-                .leftJoin(friendship.user, user)
+                .join(friendship.user, user)
                 .fetchJoin()
                 .where(friendship.matchMaker.eq(callersMatchMaker)
-                  .and(friendship.user.userToken.ne(current.getMemberCredentialToken())
-                  .and(friendship.user.gender.ne(caller.getGender())))
-                  .and(friendship.user.status.eq(MemberStatus.ACTIVE))
+                        .and(friendship.user.userToken.ne(current.getMemberCredentialToken())
+                                .and(friendship.user.gender.ne(caller.getGender())))
+                        .and(friendship.user.status.eq(MemberStatus.ACTIVE))
+                        .and(friendship.user.notIn(requestedList))
                 )
                 .fetch();
+
 
         return candidateFriendShips.stream().map(
                 entity -> entity.getUser().getUserProfileSummary()
@@ -69,13 +102,12 @@ public class ProfileService {
         try {
             targetUserAndMatchMakerFriendship = query.select(friendship)
                     .from(friendship)
-                    .leftJoin(friendship.user, user)
+                    .join(friendship.user, user)
                     .fetchJoin()
-                    .leftJoin(friendship.matchMaker, matchMaker)
+                    .join(friendship.matchMaker, matchMaker)
                     .where(friendship.matchMaker.eq(callersFriendship.get(0).getMatchMaker())
                             .and(friendship.user.id.eq(id))).fetchOne();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error(FORBIDDEN.getMessage());
             throw new GlobalException(FORBIDDEN);
         }
@@ -96,9 +128,9 @@ public class ProfileService {
     private List<Friendship> getCallersFriendship() {
         List<Friendship> callersFriendships = query.select(friendship)
                 .from(friendship)
-                .leftJoin(friendship.user, user)
+                .join(friendship.user, user)
                 .fetchJoin()
-                .leftJoin(friendship.matchMaker, matchMaker)
+                .join(friendship.matchMaker, matchMaker)
                 .fetchJoin()
                 .where(friendship.user.userToken.eq(current.getMemberCredentialToken()))
                 .fetch();

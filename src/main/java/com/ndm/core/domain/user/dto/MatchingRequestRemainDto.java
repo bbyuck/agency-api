@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfoDto {
-    private UserDto userDto;
-    private UserProfileDto userProfileDto;
-    private MatchingRequestRemainDto matchingRequestRemainDto;
+public class MatchingRequestRemainDto {
+    private Long maxCount;
+    private Long currentCount;
+    private boolean searched;
 }

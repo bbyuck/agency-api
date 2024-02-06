@@ -228,7 +228,7 @@ public class UserService {
         }
 
         User profileOwner = query.select(user)
-                .from(user).leftJoin(user.photos, photo)
+                .from(user).join(user.photos, photo)
                 .fetchJoin()
                 .where(user.userToken.eq(current.getMemberCredentialToken())).fetchOne();
         if (profileOwner.getPhotos().size() < 2 || profileOwner.getPhotos().size() > 5) {

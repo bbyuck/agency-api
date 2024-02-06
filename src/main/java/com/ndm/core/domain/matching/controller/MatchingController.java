@@ -3,8 +3,8 @@ package com.ndm.core.domain.matching.controller;
 import com.ndm.core.domain.matching.dto.MatchingRequestDto;
 import com.ndm.core.domain.matching.dto.MatchingRequestResultDto;
 import com.ndm.core.domain.matching.service.MatchingService;
+import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
-import com.ndm.core.domain.user.dto.UserProfileSummaryDto;
 import com.ndm.core.domain.user.dto.UserInfoDto;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
@@ -73,7 +73,38 @@ public class MatchingController {
     })
     public Response<UserProfileDto> findReceivedRequest() {
         return Response.<UserProfileDto>builder()
-                .data(matchingService.getReceivedRequest())
+                .data(matchingService.getReceivedRequestSender())
                 .build();
     }
+
+    @Trace
+    @PostMapping("/matching/request/confirm")
+    @Operation(summary = "받은 요청 확인", description = "받은 요청 확인")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"),
+            @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response confirmReceivedRequest() {
+        matchingService.confirmReceivedRequest();
+        return Response.<UserProfileDto>builder()
+                .build();
+    }
+
+
+    @Trace
+    @GetMapping("/matching/request/today/remain")
+    @Operation(summary = "오늘 남은 매칭 요청 횟수 조회", description = "오늘 남은 매칭 요청 횟수 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = MatchingRequestRemainDto.class))),
+            @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<MatchingRequestRemainDto> findTodayMatchingRequestRemain() {
+        return Response.<MatchingRequestRemainDto>builder()
+                .data(matchingService.findMatchingRequestRemain())
+                .build();
+    }
+
 }
