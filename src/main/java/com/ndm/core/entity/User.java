@@ -86,6 +86,9 @@ public class User extends BaseEntity {
     @Column(name = "last_login_ip", length = 30)
     private String lastLoginIp;
 
+    @Column(name = "fcm_token", length = 200)
+    private String fcmToken;
+
     @Column(name = "access_token", length = 100)
     private String accessToken;
 
@@ -100,6 +103,9 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "owner")
     private List<Photo> photos = new ArrayList<>();
 
+    public void registerFCMToken(String token) {
+        this.fcmToken = token;
+    }
 
     public void updateLoginInfo(String clientIp, String accessToken, String refreshToken) {
         this.lastLoginIp = clientIp;

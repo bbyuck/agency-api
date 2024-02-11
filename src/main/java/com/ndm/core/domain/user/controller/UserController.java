@@ -107,4 +107,19 @@ public class UserController {
                         .build())
                 .build();
     }
+
+    @Trace
+    @PostMapping("/user/fcm/token")
+    @Operation(summary = "요청자의 fcm token register", description = "요청자의 fcm token register")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<String> registerUserFCMToken(@RequestBody String token) {
+        return Response.<String>builder()
+                .data(userService.registerUserFCMToken(token))
+                .build();
+    }
 }

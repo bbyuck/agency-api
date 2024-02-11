@@ -47,6 +47,9 @@ public class MatchMaker extends BaseEntity {
     @Column(name = "last_login_ip", length = 30)
     private String lastLoginIp;
 
+    @Column(name = "fcm_token", length = 200)
+    private String fcmToken;
+
     @Column(name = "access_token", length = 100)
     private String accessToken;
 
@@ -70,5 +73,9 @@ public class MatchMaker extends BaseEntity {
 
     public void changeMatchMakerStatus(MemberStatus memberStatus) {
         this.status = memberStatus;
+    }
+
+    public void registerFCMToken(String token) {
+        this.fcmToken = token;
     }
 }

@@ -12,6 +12,7 @@ import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
+import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -202,5 +203,20 @@ public class MatchMakerService {
         return MatchMakerDto.builder()
                 .memberStatus(caller.getStatus())
                 .build();
+    }
+
+    public String registerMatchMakerFCMToken(String token) {
+        Optional<MatchMaker> optional = matchMakerRepository.findByMatchMakerToken(current.getMemberCredentialToken());
+
+        if (optional.isEmpty()) {
+            log.error(MATCHMAKER_NOT_FOUND.getMessage());
+            throw new GlobalException(MATCHMAKER_NOT_FOUND);
+        }
+
+        MatchMaker caller = optional.get();
+
+        caller.registerFCMToken(token);
+
+        return token;
     }
 }

@@ -256,6 +256,20 @@ public class UserService {
                 .build();
     }
 
+    public String registerUserFCMToken(String token) {
+        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+
+        if (optional.isEmpty()) {
+            log.error(USER_NOT_FOUND.getMessage());
+            throw new GlobalException(USER_NOT_FOUND);
+        }
+
+        User caller = optional.get();
+        caller.registerFCMToken(token);
+
+        return token;
+    }
+
 //    public UserDto idJoin(UserDto newUserDto) {
 //        /**
 //         * User 가입 이력 확인

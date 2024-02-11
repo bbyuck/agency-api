@@ -70,4 +70,19 @@ public class MatchMakerController {
                         .build())
                 .build();
     }
+
+    @Trace
+    @PostMapping("/matchmaker/fcm/token")
+    @Operation(summary = "주선자의 fcm token register", description = "주선자의 fcm token register")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<String> registerMatchMakerFCMToken(@RequestBody String token) {
+        return Response.<String>builder()
+                .data(matchMakerService.registerMatchMakerFCMToken(token))
+                .build();
+    }
 }
