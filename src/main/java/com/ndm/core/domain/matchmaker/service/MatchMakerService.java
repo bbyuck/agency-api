@@ -4,6 +4,7 @@ import com.ndm.core.common.enums.MemberStatus;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
+import com.ndm.core.domain.FCMTokenDto;
 import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
@@ -205,7 +206,7 @@ public class MatchMakerService {
                 .build();
     }
 
-    public String registerMatchMakerFCMToken(String token) {
+    public FCMTokenDto registerMatchMakerFCMToken(FCMTokenDto token) {
         Optional<MatchMaker> optional = matchMakerRepository.findByMatchMakerToken(current.getMemberCredentialToken());
 
         if (optional.isEmpty()) {

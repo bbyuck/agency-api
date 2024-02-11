@@ -1,5 +1,6 @@
 package com.ndm.core.domain.user.controller;
 
+import com.ndm.core.domain.FCMTokenDto;
 import com.ndm.core.domain.matching.service.MatchingService;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserInfoDto;
@@ -117,8 +118,8 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
-    public Response<String> registerUserFCMToken(@RequestBody String token) {
-        return Response.<String>builder()
+    public Response<FCMTokenDto> registerUserFCMToken(@RequestBody FCMTokenDto token) {
+        return Response.<FCMTokenDto>builder()
                 .data(userService.registerUserFCMToken(token))
                 .build();
     }

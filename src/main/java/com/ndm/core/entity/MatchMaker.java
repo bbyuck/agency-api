@@ -3,6 +3,7 @@ package com.ndm.core.entity;
 import com.ndm.core.common.BaseEntity;
 import com.ndm.core.common.enums.MemberStatus;
 import com.ndm.core.common.enums.OAuthCode;
+import com.ndm.core.domain.FCMTokenDto;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import jakarta.persistence.*;
 import lombok.*;
@@ -75,7 +76,7 @@ public class MatchMaker extends BaseEntity {
         this.status = memberStatus;
     }
 
-    public void registerFCMToken(String token) {
-        this.fcmToken = token;
+    public void registerFCMToken(FCMTokenDto token) {
+        this.fcmToken = token.getValue();
     }
 }

@@ -4,6 +4,7 @@ import com.ndm.core.common.enums.FriendshipStatus;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
+import com.ndm.core.domain.FCMTokenDto;
 import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
@@ -256,7 +257,7 @@ public class UserService {
                 .build();
     }
 
-    public String registerUserFCMToken(String token) {
+    public FCMTokenDto registerUserFCMToken(FCMTokenDto token) {
         Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
 
         if (optional.isEmpty()) {
@@ -265,7 +266,7 @@ public class UserService {
         }
 
         User caller = optional.get();
-        caller.registerFCMToken(token);
+        caller.registerFCMToken(token.getValue());
 
         return token;
     }

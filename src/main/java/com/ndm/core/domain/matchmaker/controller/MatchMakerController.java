@@ -1,6 +1,7 @@
 package com.ndm.core.domain.matchmaker.controller;
 
 
+import com.ndm.core.domain.FCMTokenDto;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerInfoDto;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;
@@ -80,8 +81,8 @@ public class MatchMakerController {
             @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
-    public Response<String> registerMatchMakerFCMToken(@RequestBody String token) {
-        return Response.<String>builder()
+    public Response<FCMTokenDto> registerMatchMakerFCMToken(@RequestBody FCMTokenDto token) {
+        return Response.<FCMTokenDto>builder()
                 .data(matchMakerService.registerMatchMakerFCMToken(token))
                 .build();
     }
