@@ -45,6 +45,10 @@ springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
 
+fcm:
+  key:
+    path: /Users/kanghyuk/Desktop/workspace/ddu/env/dating-agency-ab5a0-firebase-adminsdk-na2s9-a77239eb59.json
+
 ---
 jasypt:
   encryptor:
@@ -93,6 +97,10 @@ springdoc:
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
 
+fcm:
+  key:
+    path: /app/agency-api/key/dating-agency-ab5a0-firebase-adminsdk-na2s9-a77239eb59.json
+
 ---
 jasypt:
   encryptor:
@@ -137,3 +145,7 @@ springdoc:
     path: /api-docs
   default-produces-media-type: application/json
   default-consumes-media-type: application/json
+
+fcm:
+  key:
+    path: /app/agency-api/key/dating-agency-ab5a0-firebase-adminsdk-na2s9-a77239eb59.json

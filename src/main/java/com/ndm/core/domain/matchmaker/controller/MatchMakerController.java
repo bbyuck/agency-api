@@ -1,7 +1,7 @@
 package com.ndm.core.domain.matchmaker.controller;
 
 
-import com.ndm.core.domain.FCMTokenDto;
+import com.ndm.core.domain.fcm.dto.FCMTokenDto;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerInfoDto;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;

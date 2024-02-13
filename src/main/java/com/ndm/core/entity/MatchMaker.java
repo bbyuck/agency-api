@@ -3,8 +3,7 @@ package com.ndm.core.entity;
 import com.ndm.core.common.BaseEntity;
 import com.ndm.core.common.enums.MemberStatus;
 import com.ndm.core.common.enums.OAuthCode;
-import com.ndm.core.domain.FCMTokenDto;
-import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
+import com.ndm.core.domain.fcm.dto.FCMTokenDto;
 import jakarta.persistence.*;
 import lombok.*;
 

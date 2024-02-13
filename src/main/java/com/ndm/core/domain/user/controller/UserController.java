@@ -1,6 +1,6 @@
 package com.ndm.core.domain.user.controller;
 
-import com.ndm.core.domain.FCMTokenDto;
+import com.ndm.core.domain.fcm.dto.FCMTokenDto;
 import com.ndm.core.domain.matching.service.MatchingService;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserInfoDto;
