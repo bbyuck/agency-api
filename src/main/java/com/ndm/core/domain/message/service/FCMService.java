@@ -1,10 +1,10 @@
-package com.ndm.core.domain.fcm.service;
+package com.ndm.core.domain.message.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
-import com.ndm.core.common.enums.NotificationCode;
+import com.ndm.core.common.enums.ClientMessageCode;
 import com.ndm.core.entity.User;
 import com.ndm.core.model.ErrorInfo;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class FCMService {
 
     private final FirebaseMessaging firebaseMessaging;
 
-    public void sendNotificationForUser(NotificationCode notificationCode, User target) {
+    public void sendNotificationForUser(ClientMessageCode clientMessageCode, User target) {
         if (!StringUtils.hasText(target.getFcmToken())) {
             log.error(ErrorInfo.FCM_TOKEN_NOT_FOUND.getMessage());
             return;
@@ -27,8 +27,8 @@ public class FCMService {
 
         Notification notification = Notification
                 .builder()
-                .setTitle(notificationCode.getTitle())
-                .setBody(notificationCode.getBody())
+                .setTitle(clientMessageCode.getTitle())
+                .setBody(clientMessageCode.getBody())
                 .build();
 
         Message message = Message

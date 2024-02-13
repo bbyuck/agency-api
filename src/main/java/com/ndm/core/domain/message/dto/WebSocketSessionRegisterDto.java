@@ -1,4 +1,4 @@
-package com.ndm.core.domain.ws.dto;
+package com.ndm.core.domain.message.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

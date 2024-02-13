@@ -4,7 +4,7 @@ import com.ndm.core.common.enums.FriendshipStatus;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
-import com.ndm.core.domain.fcm.dto.FCMTokenDto;
+import com.ndm.core.domain.message.dto.FCMTokenDto;
 import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;

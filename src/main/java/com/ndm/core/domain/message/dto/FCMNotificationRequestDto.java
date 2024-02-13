@@ -1,4 +1,4 @@
-package com.ndm.core.domain.fcm.dto;
+package com.ndm.core.domain.message.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

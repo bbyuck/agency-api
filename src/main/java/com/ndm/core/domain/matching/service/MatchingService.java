@@ -1,9 +1,11 @@
 package com.ndm.core.domain.matching.service;
 
+import com.ndm.core.common.enums.ClientMessageCode;
 import com.ndm.core.common.enums.MemberStatus;
 import com.ndm.core.common.enums.NotificationCode;
 import com.ndm.core.common.util.WebSocketHandler;
-import com.ndm.core.domain.fcm.service.FCMService;
+import com.ndm.core.domain.message.service.ClientMessageService;
+import com.ndm.core.domain.message.service.FCMService;
 import com.ndm.core.domain.matching.dto.MatchingRequestDto;
 import com.ndm.core.domain.matching.dto.MatchingRequestResultDto;
 import com.ndm.core.domain.matching.repository.MatchingRequestRepository;
@@ -38,8 +40,6 @@ import static com.ndm.core.common.enums.Gender.M;
 import static com.ndm.core.common.enums.MatchingRequestStatus.ACTIVE;
 import static com.ndm.core.common.enums.MatchingRequestStatus.CONFIRMED;
 import static com.ndm.core.common.enums.MemberStatus.REQUEST_CONFIRMED;
-import static com.ndm.core.common.enums.WebSocketMessageType.REJECT_REQUEST;
-import static com.ndm.core.common.enums.WebSocketMessageType.SEND_REQUEST;
 import static com.ndm.core.entity.QMatching.matching;
 import static com.ndm.core.entity.QMatchingRequest.matchingRequest;
 
@@ -58,9 +58,7 @@ public class MatchingService {
 
     private final Current current;
 
-    private final WebSocketMemberSession webSocketMemberSession;
-
-    private final FCMService fcmService;
+    private final ClientMessageService clientMessageService;
 
     public MatchingRequestResultDto sendRequest(MatchingRequestDto requestDto) {
         log.info("requestDto ====== {}", requestDto.toString());
@@ -139,22 +137,7 @@ public class MatchingService {
          * 5.1. WebSocket session에 들어와 있는 경우 -> Online : WebSocket Message send
          * 5.2. 들어와있지 않은 경우 -> FCM Push Message
          */
-        String receiverSessionId = webSocketMemberSession.getSessionId(receiver.getUserToken());
-        if (receiverSessionId != null) {
-            try {
-
-                WebSocketSession webSocketSession = WebSocketHandler.CLIENTS.get(receiverSessionId);
-                JSONObject response = new JSONObject();
-                response.put("type", SEND_REQUEST.name());
-                webSocketSession.sendMessage(new TextMessage(response.toJSONString()));
-            } catch (IOException e) {
-                log.error("WebSocket 메세지 전송 중 에러가 발생했습니다.");
-                log.error(e.getMessage(), e);
-            }
-        }
-        else {
-            fcmService.sendNotificationForUser(NotificationCode.REQUEST_RECEIVED, receiver);
-        }
+        clientMessageService.sendMessageForUser(ClientMessageCode.REQUEST_RECEIVED, receiver);
 
 
         return MatchingRequestResultDto.builder()
@@ -225,18 +208,8 @@ public class MatchingService {
         /**
          * 3. sender가 웹소켓 접속되어 있는 경우 alert
          */
-        try {
-            String senderSessionId = webSocketMemberSession.getSessionId(sender.getUserToken());
-            if (senderSessionId != null) {
-                WebSocketSession webSocketSession = WebSocketHandler.CLIENTS.get(senderSessionId);
-                JSONObject response = new JSONObject();
-                response.put("type", REJECT_REQUEST.name());
-                webSocketSession.sendMessage(new TextMessage(response.toJSONString()));
-            }
-        } catch (IOException e) {
-            log.error("WebSocket 메세지 전송 중 에러가 발생했습니다.");
-            log.error(e.getMessage(), e);
-        }
+        clientMessageService.sendMessageForUser(ClientMessageCode.REQUEST_REJECTED, sender);
+
 
         return MatchingRequestResultDto.builder()
                 .memberStatus(sender.getStatus())

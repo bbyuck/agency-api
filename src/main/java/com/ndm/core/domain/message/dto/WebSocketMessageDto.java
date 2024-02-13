@@ -1,4 +1,4 @@
-package com.ndm.core.domain.ws.dto;
+package com.ndm.core.domain.message.dto;
 
 import com.ndm.core.common.enums.WebSocketMessageType;
 import lombok.AllArgsConstructor;

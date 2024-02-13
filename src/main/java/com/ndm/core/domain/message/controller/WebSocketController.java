@@ -1,8 +1,8 @@
-package com.ndm.core.domain.ws;
+package com.ndm.core.domain.message.controller;
 
 import com.ndm.core.common.util.WebSocketHandler;
-import com.ndm.core.domain.ws.dto.WebSocketSendDto;
-import com.ndm.core.domain.ws.dto.WebSocketSessionRegisterDto;
+import com.ndm.core.domain.message.dto.WebSocketSendDto;
+import com.ndm.core.domain.message.dto.WebSocketSessionRegisterDto;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
 import com.ndm.core.model.WebSocketMemberSession;
@@ -18,7 +18,6 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 
-import static com.ndm.core.common.enums.WebSocketMessageType.SEND_REQUEST;
 
 @V1
 @Slf4j
@@ -28,7 +27,6 @@ public class WebSocketController {
 
     private final WebSocketMemberSession webSocketMemberSession;
 
-
     @Trace
     @PostMapping("/ws/session/register")
     public Response<String> registerWebSocketSession(@RequestBody WebSocketSessionRegisterDto requestDto) {
@@ -36,25 +34,5 @@ public class WebSocketController {
         return Response.<String>builder()
                 .build();
     }
-
-    @Trace
-    @PostMapping("/ws/send")
-    public Response<String> send(@RequestBody WebSocketSendDto requestDto) {
-        try {
-            String receiverSessionId = webSocketMemberSession.getSessionId(requestDto.getReceiverCredentialToken());
-            if (receiverSessionId != null) {
-                WebSocketSession webSocketSession = WebSocketHandler.CLIENTS.get(receiverSessionId);
-                JSONObject response = new JSONObject();
-                response.put("type", SEND_REQUEST.name());
-                webSocketSession.sendMessage(new TextMessage(response.toJSONString()));
-            }
-        }
-        catch(IOException e) {
-            log.error("WebSocket 메세지 전송 중 에러가 발생했습니다.");
-            log.error(e.getMessage(), e);
-        }
-        return Response.<String>builder().build();
-    }
-
 
 }

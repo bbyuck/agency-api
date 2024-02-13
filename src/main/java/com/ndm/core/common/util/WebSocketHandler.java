@@ -1,6 +1,6 @@
 package com.ndm.core.common.util;
 
-import com.ndm.core.domain.ws.dto.WebSocketMessageDto;
+import com.ndm.core.domain.message.dto.WebSocketMessageDto;
 import com.ndm.core.model.WebSocketMemberSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +11,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
