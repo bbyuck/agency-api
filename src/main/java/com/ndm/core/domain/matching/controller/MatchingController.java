@@ -4,8 +4,9 @@ import com.ndm.core.domain.matching.dto.MatchingRequestDto;
 import com.ndm.core.domain.matching.dto.MatchingRequestResultDto;
 import com.ndm.core.domain.matching.service.MatchingService;
 import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
-import com.ndm.core.domain.user.dto.UserProfileDto;
+import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserInfoDto;
+import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
 import com.ndm.core.model.TraceData;
@@ -85,9 +86,9 @@ public class MatchingController {
             @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
-    public Response confirmReceivedRequest() {
-        matchingService.confirmReceivedRequest();
-        return Response.<UserProfileDto>builder()
+    public Response<UserDto> confirmReceivedRequest() {
+        return Response.<UserDto>builder()
+                .data(matchingService.confirmReceivedRequest())
                 .build();
     }
 

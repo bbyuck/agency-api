@@ -35,6 +35,7 @@ import java.util.Optional;
 import static com.ndm.core.common.enums.Gender.M;
 import static com.ndm.core.common.enums.MatchingRequestStatus.ACTIVE;
 import static com.ndm.core.common.enums.MatchingRequestStatus.CONFIRMED;
+import static com.ndm.core.common.enums.MemberStatus.*;
 import static com.ndm.core.common.enums.WebSocketMessageType.REJECT_REQUEST;
 import static com.ndm.core.common.enums.WebSocketMessageType.SEND_REQUEST;
 import static com.ndm.core.entity.QMatching.matching;
@@ -126,8 +127,8 @@ public class MatchingService {
         /**
          * 4. 유저 상태 변경
          */
-        sender.changeUserStatus(MemberStatus.MATCHING_WAIT);
-        receiver.changeUserStatus(MemberStatus.REQUEST_RECEIVED);
+        sender.changeUserStatus(MATCHING_WAIT);
+        receiver.changeUserStatus(REQUEST_RECEIVED);
 
         /**
          * 5. websocket 세션 확인
@@ -152,9 +153,15 @@ public class MatchingService {
                 .build();
     }
 
-    public void confirmReceivedRequest() {
+    public UserDto confirmReceivedRequest() {
         MatchingRequest receivedRequest = getReceivedRequest();
         receivedRequest.confirm();
+        User caller = receivedRequest.getReceiver();
+        caller.changeUserStatus(REQUEST_CONFIRMED);
+
+        return UserDto.builder()
+                .memberStatus(caller.getStatus())
+                .build();
     }
 
 
