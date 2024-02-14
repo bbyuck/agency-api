@@ -1,7 +1,6 @@
 package com.ndm.core.domain.matching.controller;
 
-import com.ndm.core.domain.matching.dto.MatchingRequestDto;
-import com.ndm.core.domain.matching.dto.MatchingRequestResultDto;
+import com.ndm.core.domain.matching.dto.*;
 import com.ndm.core.domain.matching.service.MatchingService;
 import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
 import com.ndm.core.domain.user.dto.UserDto;
@@ -72,8 +71,8 @@ public class MatchingController {
             @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
-    public Response<UserProfileDto> findReceivedRequest() {
-        return Response.<UserProfileDto>builder()
+    public Response<ReceivedRequestDto> findReceivedRequest() {
+        return Response.<ReceivedRequestDto>builder()
                 .data(matchingService.getReceivedRequestSender())
                 .build();
     }
@@ -107,5 +106,58 @@ public class MatchingController {
                 .data(matchingService.findMatchingRequestRemain())
                 .build();
     }
+
+    @Trace
+    @PostMapping("/matching/request/accept")
+    @Operation(summary = "매칭 요청 수락", description = "매칭 요청을 수락한다.")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "SUCCESS"
+                            , content = @Content(schema = @Schema(implementation = MatchingResponseDto.class))),
+                    @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
+                            , content = @Content(schema = @Schema(implementation = TraceData.class)))
+            }
+    )
+    public Response<MatchingResponseDto> acceptMatchingRequest(@RequestBody MatchingRequestDto requestDto) {
+        return Response.
+                <MatchingResponseDto>builder()
+                .data(matchingService.acceptMatchingRequest(requestDto))
+                .build();
+    }
+
+    @Trace
+    @PostMapping("/matching/confirm")
+    @Operation(summary = "매칭 확인", description = "매칭 확인")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "SUCCESS"
+                            , content = @Content(schema = @Schema(implementation = MatchingResponseDto.class))),
+                    @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
+                            , content = @Content(schema = @Schema(implementation = TraceData.class)))
+            }
+    )
+    public Response<MatchingResponseDto> confirmMatching() {
+        return Response.<MatchingResponseDto>builder()
+                .data(matchingService.confirmMatching())
+                .build();
+    }
+
+    @Trace
+    @GetMapping("/matching")
+    @Operation(summary = "현재 매칭 정보", description = "현재 매칭 정보")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "SUCCESS"
+                            , content = @Content(schema = @Schema(implementation = MatchingResponseDto.class))),
+                    @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
+                            , content = @Content(schema = @Schema(implementation = TraceData.class)))
+            }
+    )
+    public Response<MatchingInfoDto> getMatchingInfo() {
+        return Response.<MatchingInfoDto>builder()
+                .data(matchingService.getMatchingInfo())
+                .build();
+    }
+
 
 }

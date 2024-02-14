@@ -2,6 +2,7 @@ package com.ndm.core.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.h2.jdbc.JdbcSQLDataException;
 
 @Getter
 @RequiredArgsConstructor
@@ -85,7 +86,9 @@ public enum ErrorInfo {
     RECEIVED_REQUEST_NOT_FOUND(400, "RECEIVED_REUQEST_NOT_FOUND", "받은 요청이 없습니다."),
 
     // =================== FCM push 알림 관련 =================
-    FCM_TOKEN_NOT_FOUND(400, "FCM_TOKEN_NOT_FOUND", "FCM 토큰을 찾을 수 없습니다.")
+    FCM_TOKEN_NOT_FOUND(400, "FCM_TOKEN_NOT_FOUND", "FCM 토큰을 찾을 수 없습니다."),
+    MATCHING_REQUEST_NOT_FOUND(400, "MATCHING_REQUEST_NOT_FOUND", "매칭 요청을 찾을 수 없습니다."),
+    MATCHING_NOT_FOUND(400, "MATCHING_NOT_FOUND", "매칭을 찾을 수 없습니다. 관리자에게 문의해주세요.")
     ;
 
 

@@ -45,4 +45,6 @@ public class MatchingRequest extends BaseEntity {
     }
 
     public void confirm() { this.status = MatchingRequestStatus.CONFIRMED; }
+
+    public void accept() {this.status = MatchingRequestStatus.SUCCESS; }
 }

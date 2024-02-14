@@ -1,14 +1,14 @@
 package com.ndm.core.domain.matching.service;
 
 import com.ndm.core.common.enums.ClientMessageCode;
+import com.ndm.core.common.enums.MatchingStatus;
 import com.ndm.core.common.enums.MemberStatus;
-import com.ndm.core.common.enums.NotificationCode;
-import com.ndm.core.common.util.WebSocketHandler;
-import com.ndm.core.domain.message.service.ClientMessageService;
-import com.ndm.core.domain.message.service.FCMService;
-import com.ndm.core.domain.matching.dto.MatchingRequestDto;
-import com.ndm.core.domain.matching.dto.MatchingRequestResultDto;
+import com.ndm.core.domain.file.dto.FileResponseDto;
+import com.ndm.core.domain.file.service.FileService;
+import com.ndm.core.domain.matching.dto.*;
+import com.ndm.core.domain.matching.repository.MatchingRepository;
 import com.ndm.core.domain.matching.repository.MatchingRequestRepository;
+import com.ndm.core.domain.message.service.ClientMessageService;
 import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
@@ -19,26 +19,23 @@ import com.ndm.core.entity.QUser;
 import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.ErrorInfo;
-import com.ndm.core.model.WebSocketMemberSession;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static com.ndm.core.common.enums.Gender.M;
+import static com.ndm.core.common.enums.Gender.W;
 import static com.ndm.core.common.enums.MatchingRequestStatus.ACTIVE;
 import static com.ndm.core.common.enums.MatchingRequestStatus.CONFIRMED;
+import static com.ndm.core.common.enums.MatchingStatus.READY;
 import static com.ndm.core.common.enums.MemberStatus.REQUEST_CONFIRMED;
 import static com.ndm.core.entity.QMatching.matching;
 import static com.ndm.core.entity.QMatchingRequest.matchingRequest;
@@ -56,9 +53,13 @@ public class MatchingService {
 
     private final MatchingRequestRepository matchingRequestRepository;
 
+    private final MatchingRepository matchingRepository;
+
     private final Current current;
 
     private final ClientMessageService clientMessageService;
+
+    private final FileService fileService;
 
     public MatchingRequestResultDto sendRequest(MatchingRequestDto requestDto) {
         log.info("requestDto ====== {}", requestDto.toString());
@@ -156,16 +157,66 @@ public class MatchingService {
                 .build();
     }
 
+    public MatchingResponseDto acceptMatchingRequest(MatchingRequestDto requestDto) {
+
+        List<MatchingRequest> findMatchingRequest = query.select(matchingRequest)
+                .from(matchingRequest)
+                .join(matchingRequest.sender, new QUser("sender"))
+                .fetchJoin()
+                .join(matchingRequest.receiver, new QUser("receiver"))
+                .fetchJoin()
+                .where(matchingRequest.id.eq(requestDto.getId()))
+                .fetch();
+
+        if (findMatchingRequest.isEmpty()) {
+            log.error(ErrorInfo.MATCHING_REQUEST_NOT_FOUND.getMessage());
+            throw new GlobalException(ErrorInfo.MATCHING_REQUEST_NOT_FOUND);
+        }
+        MatchingRequest receivedMatchingRequest = findMatchingRequest.get(0);
+
+        User sender = receivedMatchingRequest.getSender();
+        User receiver = receivedMatchingRequest.getReceiver();
+
+        /**
+         * 1. matching 생성
+         * 2. sender 상태 변경 -> MATCHING
+         * 3. receiver 상태 변경 -> MATCHING_CONFIRMED
+         * 4. matching request 상태 변경
+         * 5. sender에게 clientMessage 전송
+         */
+        Matching newMatching = Matching.builder()
+                .requesterId(sender.getId())
+                .man(sender.getGender() == M ? sender : receiver)
+                .woman(sender.getGender() == W ? sender : receiver)
+                .matchingRequest(receivedMatchingRequest)
+                .matchingDate(LocalDateTime.now())
+                .step(1)
+                .status(READY)
+                .build();
+        matchingRepository.save(newMatching);
+        sender.changeUserStatus(MemberStatus.MATCHING);
+        receiver.changeUserStatus(MemberStatus.MATCHING_CONFIRMED);
+        receivedMatchingRequest.accept();
+
+        clientMessageService.sendMessageForUser(ClientMessageCode.REQUEST_ACCEPTED, sender);
+
+        return MatchingResponseDto.builder()
+                .memberStatus(receiver.getStatus())
+                .build();
+    }
+
 
     @Transactional(readOnly = true)
-    public UserProfileDto getReceivedRequestSender() {
+    public ReceivedRequestDto getReceivedRequestSender() {
         MatchingRequest receivedRequest = getReceivedRequest();
         User sender = receivedRequest.getSender();
 
         UserProfileDto senderProfileInfo = sender.getUserProfileInfo();
-        senderProfileInfo.setMatchingRequestStatus(receivedRequest.getStatus());
-
-        return senderProfileInfo;
+        return ReceivedRequestDto.builder()
+                .senderProfileInfo(senderProfileInfo)
+                .matchingRequestStatus(receivedRequest.getStatus())
+                .id(receivedRequest.getId())
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -242,4 +293,71 @@ public class MatchingService {
                 .build();
     }
 
+    public MatchingResponseDto confirmMatching() {
+        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        if (optional.isEmpty()) {
+            log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
+            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
+        }
+        User caller = optional.get();
+
+        List<Matching> findMatching = query.select(matching)
+                .from(matching)
+                .where(
+                        (caller.getGender().equals(M)
+                                ? matching.man.eq(caller) : matching.woman.eq(caller))
+                                .and(matching.status.eq(READY))
+                )
+                .fetch();
+
+        if (findMatching.isEmpty()) {
+            log.error(ErrorInfo.MATCHING_NOT_FOUND.getMessage());
+            throw new GlobalException(ErrorInfo.MATCHING_NOT_FOUND);
+        }
+        caller.changeUserStatus(MemberStatus.MATCHING_CONFIRMED);
+
+        return MatchingResponseDto.builder()
+                .memberStatus(caller.getStatus())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public MatchingInfoDto getMatchingInfo() {
+        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        if (optional.isEmpty()) {
+            log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
+            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
+        }
+        User caller = optional.get();
+
+        List<Matching> findMatching = query.select(matching)
+                .from(matching)
+                .where(
+                        (caller.getGender().equals(M)
+                                ? matching.man.eq(caller) : matching.woman.eq(caller))
+                                .and(matching.status.eq(READY))
+                )
+                .fetch();
+
+        if (findMatching.isEmpty()) {
+            log.error(ErrorInfo.MATCHING_NOT_FOUND.getMessage());
+            throw new GlobalException(ErrorInfo.MATCHING_NOT_FOUND);
+        }
+        Matching currentMatching = findMatching.get(0);
+
+        User opponent = currentMatching.getMan() == caller
+                ? currentMatching.getWoman()
+                : currentMatching.getMan();
+
+        MatchingInfoDto matchingInfoDto = MatchingInfoDto.builder()
+                .opponentProfileInfo(opponent.getUserProfileInfo())
+                .matchingStatus(currentMatching.getStatus())
+                .id(currentMatching.getId())
+                .build();
+
+        matchingInfoDto.getOpponentProfileInfo()
+                .setPhotoData(fileService.getFileData(opponent));
+
+        return matchingInfoDto;
+    }
 }

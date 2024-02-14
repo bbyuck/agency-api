@@ -10,7 +10,9 @@ public enum MemberStatus {
     REQUEST_REJECTED,   // 요청을 거절 당함
     REQUEST_RECEIVED,   // 요청을 받은 상태
     REQUEST_CONFIRMED,  // 요청을 확인한 상태
+
     MATCHING,   // 3. 유저 : 요청 및 매칭중 단계
+    MATCHING_CONFIRMED, // 매칭을 확인한 상태
     INACTIVE,   // 3. 유저 : 프로필 미공개 (남성사 중간단계)
     COMPLETED   // 5. 매칭 성공 / 프로필 미공개
 }

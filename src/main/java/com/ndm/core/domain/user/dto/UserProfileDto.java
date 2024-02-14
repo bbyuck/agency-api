@@ -17,8 +17,6 @@ public class UserProfileDto {
 
     private boolean exist = true;
 
-    private MatchingRequestStatus matchingRequestStatus;
-
     private Long id;
     private Gender gender;
     private String age;

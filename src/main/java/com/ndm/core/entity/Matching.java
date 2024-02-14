@@ -1,7 +1,7 @@
 package com.ndm.core.entity;
 
 import com.ndm.core.common.BaseEntity;
-import com.ndm.core.common.enums.MatchStatus;
+import com.ndm.core.common.enums.MatchingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,10 +41,7 @@ public class Matching extends BaseEntity {
 
     @Column(name = "matching_status", length = 20)
     @Enumerated(EnumType.STRING)
-    private MatchStatus status;
-
-    @Column(name = "request_date")
-    private LocalDateTime requestDate;
+    private MatchingStatus status;
 
     @Column(name = "requester_id")
     private Long requesterId;
