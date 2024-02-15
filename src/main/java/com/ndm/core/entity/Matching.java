@@ -2,6 +2,7 @@ package com.ndm.core.entity;
 
 import com.ndm.core.common.BaseEntity;
 import com.ndm.core.common.enums.MatchingStatus;
+import com.ndm.core.domain.matching.dto.MatchingRelation;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,13 +28,21 @@ public class Matching extends BaseEntity {
     @Column(name = "matching_id", unique = true, nullable = false, updatable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "man_id")
     private User man;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "man_match_maker_id")
+    private MatchMaker manMatchMaker;
+
+    @ManyToOne
     @JoinColumn(name = "woman_id")
     private User woman;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "woman_match_maker_id")
+    private MatchMaker womanMatchMaker;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "matching_request_id")
@@ -49,6 +58,21 @@ public class Matching extends BaseEntity {
     @Column(name = "matching_date")
     private LocalDateTime matchingDate;
 
-    @Column(name = "step")
-    private Integer step;
+
+    // ============== 유저 편의 메서드 =================
+    public void success() {
+        this.status = MatchingStatus.SUCCESS;
+    }
+
+    public void cancel() {
+        this.status = MatchingStatus.CANCEL;
+    }
+
+    public MatchingRelation getRelation(String callersToken) {
+        User caller = getMan().getUserToken().equals(callersToken) ? getMan() : getWoman();
+        return MatchingRelation.builder()
+                .caller(caller)
+                .opponent(getMan() == caller ? getWoman() : getMan())
+                .build();
+    }
 }

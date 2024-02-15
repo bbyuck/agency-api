@@ -5,7 +5,6 @@ import com.ndm.core.domain.matching.service.MatchingService;
 import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserInfoDto;
-import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
 import com.ndm.core.model.TraceData;
@@ -156,6 +155,41 @@ public class MatchingController {
     public Response<MatchingInfoDto> getMatchingInfo() {
         return Response.<MatchingInfoDto>builder()
                 .data(matchingService.getMatchingInfo())
+                .build();
+    }
+
+
+    @Trace
+    @PostMapping("/matching/complete")
+    @Operation(summary = "매칭 성사 요청", description = "매칭에 동의하고 소개 받기를 주선자에게 요청, 둘 모두가 동의된 시점에 양측 주선자에게 알림 발송")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "SUCCESS"
+                            , content = @Content(schema = @Schema(implementation = MatchingResponseDto.class))),
+                    @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
+                            , content = @Content(schema = @Schema(implementation = TraceData.class)))
+            }
+    )
+    public Response<MatchingResponseDto> matchingComplete(@RequestBody MatchingDto matchingDto) {
+        return Response.<MatchingResponseDto>builder()
+                .data(matchingService.matchingComplete(matchingDto))
+                .build();
+    }
+
+    @Trace
+    @PostMapping("/matching/cancel")
+    @Operation(summary = "매칭 취소 요청", description = "현재 걸려있는 매칭을 취소하고 상대방에게 알림 발송")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "SUCCESS"
+                            , content = @Content(schema = @Schema(implementation = MatchingResponseDto.class))),
+                    @ApiResponse(responseCode = "500", description = "요청 실패 - 사유 코드 참조"
+                            , content = @Content(schema = @Schema(implementation = TraceData.class)))
+            }
+    )
+    public Response<MatchingResponseDto> matchingCancel(@RequestBody MatchingDto matchingDto) {
+        return Response.<MatchingResponseDto>builder()
+                .data(matchingService.matchingCancel(matchingDto))
                 .build();
     }
 
