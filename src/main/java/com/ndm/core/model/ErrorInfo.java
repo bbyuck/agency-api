@@ -80,9 +80,9 @@ public enum ErrorInfo {
     // =================== 매칭 관련 Exception ================
     MATCH_REQUESTED_BEFORE(400, "MATCH_REQUESTED_BEFORE", "이미 서로 요청을 주고받은 이력이 있는 유저입니다."),
     MATCHED_BEFORE(400, "MATCHED_BEFORE", "이미 서로 매칭된 이력이 있는 유저입니다."),
-    OPPONENT_NOT_FOUND(400, "OPPONENT_NOT_FOUND", "상대방을 찾을 수 없습니다."),
+    OPPONENT_NOT_FOUND(400, "OPPONENT_NOT_FOUND", "상대을 찾을 수 없습니다."),
     CANNOT_SEND_REQUEST_STATUS(400, "CANNOT_SEND_REQUEST_STATUS", "현재 요청을 보낼 수 없는 상태입니다."),
-    CANNOT_RECEIVE_REQUEST_STATUS(400, "INVALID_OPPONENT_STATUS", "상대방이 요청을 받을 수 있는 상태가 아닙니다."),
+    CANNOT_RECEIVE_REQUEST_STATUS(400, "INVALID_OPPONENT_STATUS", "상대이 요청을 받을 수 있는 상태가 아닙니다."),
     RECEIVED_REQUEST_NOT_FOUND(400, "RECEIVED_REUQEST_NOT_FOUND", "받은 요청이 없습니다."),
     MATCHING_REQUEST_NOT_FOUND(400, "MATCHING_REQUEST_NOT_FOUND", "매칭 요청을 찾을 수 없습니다."),
     MATCHING_NOT_FOUND(400, "MATCHING_NOT_FOUND", "매칭을 찾을 수 없습니다. 관리자에게 문의해주세요."),

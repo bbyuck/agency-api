@@ -31,7 +31,7 @@ public class MatchingController {
 
     @Trace
     @PostMapping("/matching/request")
-    @Operation(summary = "상대방에게 매칭 요청보내기", description = "상대방에게 매칭 요청보내기")
+    @Operation(summary = "상대에게 매칭 요청보내기", description = "상대에게 매칭 요청보내기")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "SUCCESS"
                     , content = @Content(schema = @Schema(implementation = MatchingRequestResultDto.class))),
@@ -178,7 +178,7 @@ public class MatchingController {
 
     @Trace
     @PostMapping("/matching/cancel")
-    @Operation(summary = "매칭 취소 요청", description = "현재 걸려있는 매칭을 취소하고 상대방에게 알림 발송")
+    @Operation(summary = "매칭 취소 요청", description = "현재 걸려있는 매칭을 취소하고 상대에게 알림 발송")
     @ApiResponses(
             {
                     @ApiResponse(responseCode = "200", description = "SUCCESS"

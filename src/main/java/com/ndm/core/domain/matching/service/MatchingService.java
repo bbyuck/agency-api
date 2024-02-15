@@ -392,7 +392,7 @@ public class MatchingService {
          * 2. Matching 상대 Status 확인
          * ==== man, woman 모두 동의시
          * 2.1. 양쪽 주선자에게 알림 발송
-         * 2.2. 상대방에게 알림 발송
+         * 2.2. 상대에게 알림 발송
          * 2.3. MatchingStatus 변경
          */
         Optional<Matching> optional = matchingRepository.findById(matchingDto.getId());
@@ -422,7 +422,7 @@ public class MatchingService {
                 clientMessageService.sendMessage(ClientMessageCode.M_MATCHING_SUCCESS, womanMatchMaker);
             }
 
-            // 2.2. 상대방에게 알림 발송
+            // 2.2. 상대에게 알림 발송
             clientMessageService.sendMessage(ClientMessageCode.U_MATCHING_SUCCESS, opponent);
 
             // 2.3. MatchingStatus 변경
@@ -438,7 +438,7 @@ public class MatchingService {
         /**
          * 1. Matching Status 변경
          * 2. 양쪽 유저 Status 변경
-         * 3. 상대방에게 매칭 cancel 알림
+         * 3. 상대에게 매칭 cancel 알림
          */
         Optional<Matching> optional = matchingRepository.findById(matchingDto.getId());
         if (optional.isEmpty()) {
