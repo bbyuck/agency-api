@@ -4,6 +4,7 @@ import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.domain.agreement.dto.AgreementDto;
 import com.ndm.core.domain.agreement.dto.TempMemberDto;
 import com.ndm.core.domain.agreement.service.AgreementService;
+import com.ndm.core.domain.member.dto.MemberInfoDto;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
 import com.ndm.core.model.TraceData;
@@ -17,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @V1
 @Slf4j
@@ -44,22 +44,20 @@ public class AgreementController {
                 .build();
     }
 
-    @Trace
-    @GetMapping("/agreement/check")
-    @Operation(summary = "요청자가 필수 동의서에 모두 동의했는지 여부 체크", description = "요청자가 필수 동의서에 모두 동의했는지 여부 체크")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200"
-                    , description = "SUCCESS"
-                    , content = @Content(schema = @Schema(implementation = AgreementDto.class))),
-            @ApiResponse(responseCode = "500", description = "요청자가 필수 동의서에 모두 동의했는지 여부 체크"
-                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
-    })
-    public Response<Boolean> checkAgreement(@RequestParam String oauthId, @RequestParam OAuthCode oauthCode) {
-        return Response.<Boolean>builder()
-                .data(agreementService.agreeWithAllEssential(AgreementDto.builder()
-                        .oauthId(oauthId)
-                        .oauthCode(oauthCode)
-                        .build()))
-                .build();
-    }
+//    @Trace
+//    @GetMapping("/agreement/check")
+//    @Operation(summary = "요청자가 필수 동의서에 모두 동의했는지 여부 체크", description = "요청자가 필수 동의서에 모두 동의했는지 여부 체크")
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200"
+//                    , description = "SUCCESS"
+//                    , content = @Content(schema = @Schema(implementation = AgreementDto.class))),
+//            @ApiResponse(responseCode = "500", description = "요청자가 필수 동의서에 모두 동의했는지 여부 체크"
+//                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+//    })
+//    public Response<MemberInfoDto> checkAgreement() {
+//        agreementService.agreeWithAllEssential();
+//        return Response.<MemberInfoDto>builder()
+//                .data()
+//                .build();
+//    }
 }

@@ -1,7 +1,6 @@
 package com.ndm.core.domain.user.service;
 
-import com.ndm.core.common.enums.MemberStatus;
-import com.ndm.core.domain.user.dto.MatchingRequestRemainDto;
+import com.ndm.core.common.enums.UserStatus;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.dto.UserProfileSummaryDto;
 import com.ndm.core.domain.user.repository.UserRepository;
@@ -17,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,9 +77,9 @@ public class ProfileService {
                 .join(friendship.user, user)
                 .fetchJoin()
                 .where(friendship.matchMaker.eq(callersMatchMaker)
-                        .and(friendship.user.userToken.ne(current.getMemberCredentialToken())
+                        .and(friendship.user.credentialToken.ne(current.getMemberCredentialToken())
                                 .and(friendship.user.gender.ne(caller.getGender())))
-                        .and(friendship.user.status.eq(MemberStatus.ACTIVE))
+                        .and(friendship.user.status.eq(UserStatus.ACTIVE))
                         .and(friendship.user.notIn(requestedList))
                 )
                 .fetch();
@@ -116,7 +114,7 @@ public class ProfileService {
         /**
          * 2. 타겟 유저 status 확인
          */
-        if (targetUser.getStatus() != MemberStatus.ACTIVE) {
+        if (targetUser.getStatus() != UserStatus.ACTIVE) {
             log.info(CANNOT_RECEIVE_REQUEST_STATUS.getMessage());
             throw new GlobalException(CANNOT_RECEIVE_REQUEST_STATUS);
         }
@@ -132,7 +130,7 @@ public class ProfileService {
                 .fetchJoin()
                 .join(friendship.matchMaker, matchMaker)
                 .fetchJoin()
-                .where(friendship.user.userToken.eq(current.getMemberCredentialToken()))
+                .where(friendship.user.credentialToken.eq(current.getMemberCredentialToken()))
                 .fetch();
 
         if (callersFriendships.isEmpty()) {

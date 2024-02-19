@@ -1,8 +1,8 @@
 package com.ndm.core.domain.user.dto;
 
-import com.ndm.core.common.enums.MemberStatus;
 import com.ndm.core.common.enums.MemberCode;
 import com.ndm.core.common.enums.OAuthCode;
+import com.ndm.core.common.enums.UserStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -18,11 +18,10 @@ public class UserDto {
 
     private String refreshToken;
 
+    private UserStatus userStatus;
 
 
     private final MemberCode memberCode = MemberCode.USER;
-
-    private MemberStatus memberStatus;
 
     private OAuthCode oauthCode;
 

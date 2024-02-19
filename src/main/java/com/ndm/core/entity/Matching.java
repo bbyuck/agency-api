@@ -69,7 +69,7 @@ public class Matching extends BaseEntity {
     }
 
     public MatchingRelation getRelation(String callersToken) {
-        User caller = getMan().getUserToken().equals(callersToken) ? getMan() : getWoman();
+        User caller = getMan().getCredentialToken().equals(callersToken) ? getMan() : getWoman();
         return MatchingRelation.builder()
                 .caller(caller)
                 .opponent(getMan() == caller ? getWoman() : getMan())

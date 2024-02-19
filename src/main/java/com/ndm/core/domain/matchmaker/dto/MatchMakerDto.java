@@ -1,6 +1,6 @@
 package com.ndm.core.domain.matchmaker.dto;
 
-import com.ndm.core.common.enums.MemberStatus;
+import com.ndm.core.common.enums.MatchMakerStatus;
 import com.ndm.core.common.enums.MemberCode;
 import com.ndm.core.common.enums.OAuthCode;
 import lombok.*;
@@ -20,7 +20,7 @@ public class MatchMakerDto {
 
     private final MemberCode memberCode = MemberCode.MATCH_MAKER;
 
-    private MemberStatus memberStatus;
+    private MatchMakerStatus matchMakerStatus;
 
 
 

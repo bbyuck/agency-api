@@ -11,5 +11,7 @@ public interface AgreementRepository extends JpaRepository<Agreement, Long> {
 
     Optional<Agreement> findByOauthCodeAndOauthId(OAuthCode oauthCode, String oauthId);
 
+    Optional<Agreement> findByCodeAndCredentialToken(AgreementCode agreementCode, String credentialToken);
+
     Optional<Agreement> findByOauthCodeAndOauthIdAndCode(OAuthCode oauthCode, String oauthId, AgreementCode agreementCode);
 }

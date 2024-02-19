@@ -1,8 +1,6 @@
 package com.ndm.core.domain.kakao.dto;
 
-import com.ndm.core.common.enums.MemberCode;
-import com.ndm.core.common.enums.MemberStatus;
-import com.ndm.core.common.enums.OAuthCode;
+import com.ndm.core.common.enums.*;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,8 +12,8 @@ public class KakaoLoginDto {
     private String credentialToken;
     private String accessToken;
     private String refreshToken;
-    private MemberCode memberCode;
-    private MemberStatus memberStatus;
+    private UserStatus userStatus;
+    private MatchMakerStatus matchMakerStatus;
 
     /**
      * 이용동의서용

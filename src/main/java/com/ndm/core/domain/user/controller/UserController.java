@@ -1,5 +1,6 @@
 package com.ndm.core.domain.user.controller;
 
+import com.ndm.core.domain.matchmaker.dto.MatchMakerFriendDto;
 import com.ndm.core.domain.message.dto.FCMTokenDto;
 import com.ndm.core.domain.matching.service.MatchingService;
 import com.ndm.core.domain.user.dto.UserDto;
@@ -18,6 +19,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @V1
 @Slf4j
@@ -105,6 +108,7 @@ public class UserController {
                         .userDto(userService.findCaller())
                         .userProfileDto(userService.findCallersProfile())
                         .matchingRequestRemainDto(matchingService.findMatchingRequestRemain())
+                        .matchMakerFriends(userService.findMatchMakerFriends())
                         .build())
                 .build();
     }
@@ -121,6 +125,21 @@ public class UserController {
     public Response<FCMTokenDto> registerUserFCMToken(@RequestBody FCMTokenDto token) {
         return Response.<FCMTokenDto>builder()
                 .data(userService.registerUserFCMToken(token))
+                .build();
+    }
+
+    @Trace
+    @PostMapping("/user/matchmaker/friend")
+    @Operation(summary = "주선자 친구 목록 조회", description = "주선자 친구 목록 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "주선자 친구 목록 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<List<MatchMakerFriendDto>> registerUserFCMToken() {
+        return Response.<List<MatchMakerFriendDto>>builder()
+                .data(userService.findMatchMakerFriends())
                 .build();
     }
 }

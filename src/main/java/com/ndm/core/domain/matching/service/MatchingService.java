@@ -1,7 +1,7 @@
 package com.ndm.core.domain.matching.service;
 
 import com.ndm.core.common.enums.ClientMessageCode;
-import com.ndm.core.common.enums.MemberStatus;
+import com.ndm.core.common.enums.UserStatus;
 import com.ndm.core.domain.file.service.FileService;
 import com.ndm.core.domain.matching.dto.*;
 import com.ndm.core.domain.matching.repository.MatchingRepository;
@@ -31,12 +31,13 @@ import static com.ndm.core.common.enums.Gender.W;
 import static com.ndm.core.common.enums.MatchingRequestStatus.ACTIVE;
 import static com.ndm.core.common.enums.MatchingRequestStatus.CONFIRMED;
 import static com.ndm.core.common.enums.MatchingStatus.READY;
-import static com.ndm.core.common.enums.MemberStatus.*;
-import static com.ndm.core.entity.QFriendship.*;
+import static com.ndm.core.common.enums.UserStatus.MATCHING_ACCEPTED;
+import static com.ndm.core.common.enums.UserStatus.REQUEST_CONFIRMED;
+import static com.ndm.core.entity.QFriendship.friendship;
 import static com.ndm.core.entity.QMatchMaker.matchMaker;
 import static com.ndm.core.entity.QMatching.matching;
 import static com.ndm.core.entity.QMatchingRequest.matchingRequest;
-import static com.ndm.core.entity.QUser.*;
+import static com.ndm.core.entity.QUser.user;
 
 
 @Slf4j
@@ -64,7 +65,7 @@ public class MatchingService {
 
         // 1. 이전에 요청읇 보냈거나 매칭된 적이 있는지 여부 확인
         // 1.1. 서로가 서로에게 요청을 보낸적이 있는지 확인
-        Optional<User> senderOptional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        Optional<User> senderOptional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
         if (senderOptional.isEmpty()) {
             log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
             throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
@@ -107,11 +108,11 @@ public class MatchingService {
         /**
          * 2. 유저 상태 체크
          */
-        if (sender.getStatus() != MemberStatus.ACTIVE) {
+        if (sender.getStatus() != UserStatus.ACTIVE) {
             log.error(ErrorInfo.CANNOT_SEND_REQUEST_STATUS.getMessage());
             throw new GlobalException(ErrorInfo.CANNOT_SEND_REQUEST_STATUS);
         }
-        if (receiver.getStatus() != MemberStatus.ACTIVE) {
+        if (receiver.getStatus() != UserStatus.ACTIVE) {
             log.error(ErrorInfo.CANNOT_RECEIVE_REQUEST_STATUS.getMessage());
         }
 
@@ -128,8 +129,8 @@ public class MatchingService {
         /**
          * 4. 유저 상태 변경
          */
-        sender.changeUserStatus(MemberStatus.MATCHING_WAIT);
-        receiver.changeUserStatus(MemberStatus.REQUEST_RECEIVED);
+        sender.changeUserStatus(UserStatus.MATCHING_WAIT);
+        receiver.changeUserStatus(UserStatus.REQUEST_RECEIVED);
 
         /**
          * 5. 알림 처리
@@ -140,7 +141,7 @@ public class MatchingService {
 
 
         return MatchingRequestResultDto.builder()
-                .memberStatus(sender.getStatus())
+                .userStatus(sender.getStatus())
                 .build();
     }
 
@@ -151,7 +152,7 @@ public class MatchingService {
         caller.changeUserStatus(REQUEST_CONFIRMED);
 
         return UserDto.builder()
-                .memberStatus(caller.getStatus())
+                .userStatus(caller.getStatus())
                 .build();
     }
 
@@ -202,14 +203,14 @@ public class MatchingService {
                 .status(READY)
                 .build();
         matchingRepository.save(newMatching);
-        sender.changeUserStatus(MemberStatus.MATCHING);
-        receiver.changeUserStatus(MemberStatus.MATCHING_CONFIRMED);
+        sender.changeUserStatus(UserStatus.MATCHING);
+        receiver.changeUserStatus(UserStatus.MATCHING_CONFIRMED);
         receivedMatchingRequest.accept();
 
         clientMessageService.sendMessage(ClientMessageCode.REQUEST_ACCEPTED, sender);
 
         return MatchingResponseDto.builder()
-                .memberStatus(receiver.getStatus())
+                .userStatus(receiver.getStatus())
                 .build();
     }
 
@@ -252,7 +253,7 @@ public class MatchingService {
                 .fetchJoin()
                 .join(matchingRequest.sender, new QUser("sender"))
                 .fetchJoin()
-                .where(matchingRequest.receiver.userToken.eq(current.getMemberCredentialToken())
+                .where(matchingRequest.receiver.credentialToken.eq(current.getMemberCredentialToken())
                         .and(matchingRequest.status.in(Arrays.asList(ACTIVE, CONFIRMED))))
                 .fetch();
 
@@ -278,8 +279,8 @@ public class MatchingService {
         /**
          * 2. 유저들 상태 변경
          */
-        sender.changeUserStatus(MemberStatus.ACTIVE);
-        receiver.changeUserStatus(MemberStatus.ACTIVE);
+        sender.changeUserStatus(UserStatus.ACTIVE);
+        receiver.changeUserStatus(UserStatus.ACTIVE);
 
         /**
          * 3. sender가 웹소켓 접속되어 있는 경우 alert
@@ -288,7 +289,7 @@ public class MatchingService {
 
 
         return MatchingRequestResultDto.builder()
-                .memberStatus(sender.getStatus())
+                .userStatus(sender.getStatus())
                 .build();
     }
 
@@ -303,7 +304,7 @@ public class MatchingService {
         return query.select(matchingRequest.count())
                 .from(matchingRequest)
                 .where(
-                        matchingRequest.sender.userToken.eq(current.getMemberCredentialToken())
+                        matchingRequest.sender.credentialToken.eq(current.getMemberCredentialToken())
                                 .and(matchingRequest.createdDate.between(lastMidnight, thisMidnight))
                 )
                 .fetchOne();
@@ -319,7 +320,7 @@ public class MatchingService {
     }
 
     public MatchingResponseDto confirmMatching() {
-        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
         if (optional.isEmpty()) {
             log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
             throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
@@ -339,16 +340,16 @@ public class MatchingService {
             log.error(ErrorInfo.MATCHING_NOT_FOUND.getMessage());
             throw new GlobalException(ErrorInfo.MATCHING_NOT_FOUND);
         }
-        caller.changeUserStatus(MemberStatus.MATCHING_CONFIRMED);
+        caller.changeUserStatus(UserStatus.MATCHING_CONFIRMED);
 
         return MatchingResponseDto.builder()
-                .memberStatus(caller.getStatus())
+                .userStatus(caller.getStatus())
                 .build();
     }
 
     @Transactional(readOnly = true)
     public MatchingInfoDto getMatchingInfo() {
-        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
         if (optional.isEmpty()) {
             log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
             throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
@@ -407,7 +408,7 @@ public class MatchingService {
         User caller = relation.getCaller();
         User opponent = relation.getOpponent();
 
-        caller.changeUserStatus(MemberStatus.MATCHING_ACCEPTED);
+        caller.changeUserStatus(MATCHING_ACCEPTED);
 
         if (caller.getStatus() == MATCHING_ACCEPTED && opponent.getStatus() == MATCHING_ACCEPTED) {
             // 2.1. 양쪽 주선자에게 알림 발송
@@ -430,7 +431,7 @@ public class MatchingService {
         }
 
         return MatchingResponseDto.builder()
-                .memberStatus(caller.getStatus())
+                .userStatus(caller.getStatus())
                 .build();
     }
 
@@ -454,13 +455,13 @@ public class MatchingService {
         User caller = relation.getCaller();
         User opponent = relation.getOpponent();
 
-        caller.changeUserStatus(MATCHING_CANCEL);
-        opponent.changeUserStatus(MATCHING_CANCEL);
+        caller.changeUserStatus(UserStatus.MATCHING_CANCEL);
+        opponent.changeUserStatus(UserStatus.MATCHING_CANCEL);
 
         clientMessageService.sendMessage(ClientMessageCode.MATCHING_CANCEL, opponent);
 
         return MatchingResponseDto.builder()
-                .memberStatus(caller.getStatus())
+                .userStatus(caller.getStatus())
                 .build();
     }
 }

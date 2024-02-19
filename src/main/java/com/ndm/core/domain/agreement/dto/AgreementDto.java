@@ -16,6 +16,7 @@ import java.util.List;
 public class AgreementDto {
     private OAuthCode oauthCode;
     private String oauthId;
+    private String credentialToken;
     private List<AgreementInnerDto> agreements;
 
     @Data

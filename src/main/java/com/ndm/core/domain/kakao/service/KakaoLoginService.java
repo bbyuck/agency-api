@@ -1,7 +1,6 @@
 package com.ndm.core.domain.kakao.service;
 
-import com.ndm.core.common.enums.MemberStatus;
-import com.ndm.core.common.enums.MemberCode;
+import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.OIDCHelper;
 import com.ndm.core.common.util.RSACrypto;
 import com.ndm.core.domain.agreement.dto.AgreementDto;
@@ -15,7 +14,6 @@ import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.service.UserService;
-import com.ndm.core.model.Current;
 import com.ndm.core.model.exception.GlobalException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -29,9 +27,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
-import static com.ndm.core.common.enums.OAuthCode.*;
-import static com.ndm.core.model.ErrorInfo.INTERNAL_SERVER_ERROR;
-import static com.ndm.core.model.ErrorInfo.INVALID_TOKEN;
+import static com.ndm.core.common.enums.OAuthCode.KAKAO;
+import static com.ndm.core.model.ErrorInfo.*;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 
 @Slf4j
@@ -48,7 +45,8 @@ public class KakaoLoginService {
 
     private final MatchMakerService matchMakerService;
 
-    private final Current current;
+    private final CommonUtil commonUtil;
+
 
     private final OIDCHelper oidcHelper;
 
@@ -87,78 +85,53 @@ public class KakaoLoginService {
         MatchMakerDto matchMakerForLogin = matchMakerService.findMatchMakerByOAuth(subject, KAKAO);
         boolean isNotMatchMaker = matchMakerForLogin.getCredentialToken() == null;
 
-        if (isNotMatchMaker && isNotUser) {
-            /**
-             * MatchMaker 및 유저 DB에 존재하지 않음
-             */
+        if (isNotUser || isNotMatchMaker) {
+            String newCredentialToken = commonUtil.issueMemberToken();
 
-            /**
-             * 화면으로 카카오 로그인 정보 전달해 회원 타입 설정 및 회원 가입 진행
-             */
-
-            try {
-                String encryptedOAuthId = rsaCrypto.encrypt(subject);
-                if (agreementService.agreeWithAllEssential(KAKAO, subject)) {
-                    return KakaoLoginDto.builder()
-                            .oauthId(encryptedOAuthId)
-                            .oauthCode(KAKAO)
-                            .accessToken(kakaoOAuthResponseDto.getAccess_token())
-                            .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
-                            .memberCode(MemberCode.TEMP)
-                            .memberStatus(MemberStatus.NEW)
-                            .build();
-                }
-
-                agreementService.createAgreement(AgreementDto.builder()
+            if (isNotUser) {
+                userService.join(UserDto.builder()
+                        .oauthCode(KAKAO)
                         .oauthId(subject)
-                        .oauthCode(KAKAO)
-                        .build());
-
-                return KakaoLoginDto.builder()
-                        .oauthId(encryptedOAuthId)
-                        .oauthCode(KAKAO)
+                        .credentialToken(newCredentialToken)
                         .accessToken(kakaoOAuthResponseDto.getAccess_token())
                         .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
-                        .memberCode(MemberCode.TEMP)
-                        .memberStatus(MemberStatus.TEMP)
-                        .build();
+                        .build());
             }
-            catch(Exception e) {
-                log.error(e.getMessage(), e);
-                throw new GlobalException(INTERNAL_SERVER_ERROR);
+            if (isNotMatchMaker) {
+                matchMakerService.join(MatchMakerDto.builder()
+                        .oauthId(subject)
+                        .oauthCode(KAKAO)
+                        .credentialToken(newCredentialToken)
+                        .accessToken(kakaoOAuthResponseDto.getAccess_token())
+                        .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
+                        .build());
             }
-        } else if (isNotUser) {
-            /**
-             * 로그인 요청을 한 클라이언트 === MatchMaker
-             */
-            log.info("{} ====== match maker login");
-            matchMakerService.login(matchMakerForLogin);
 
-            return KakaoLoginDto.builder()
-                    .credentialToken(matchMakerForLogin.getCredentialToken())
-                    .accessToken(matchMakerForLogin.getAccessToken())
-                    .refreshToken(matchMakerForLogin.getRefreshToken())
-                    .memberCode(MemberCode.MATCH_MAKER)
-                    .memberStatus(matchMakerForLogin.getMemberStatus())
+            AgreementDto agreementDto = AgreementDto
+                    .builder()
+                    .oauthCode(KAKAO)
+                    .credentialToken(newCredentialToken)
+                    .oauthId(subject)
                     .build();
 
-        } else {
-            /**
-             * 로그인 요청을 한 클라이언트 === User
-             */
-            log.info("{} ====== user login");
-            userService.login(userForLogin);
+            if (!agreementService.agreementCreated(agreementDto)) {
+                agreementService.createAgreement(agreementDto);
+            }
 
-            return KakaoLoginDto.builder()
-                    .credentialToken(userForLogin.getCredentialToken())
-                    .accessToken(userForLogin.getAccessToken())
-                    .refreshToken(userForLogin.getRefreshToken())
-                    .memberCode(MemberCode.USER)
-                    .memberStatus(userForLogin.getMemberStatus())
-                    .build();
         }
-    }
 
+        userForLogin = userService.findUserByOAuth(subject, KAKAO);
+        matchMakerForLogin = matchMakerService.findMatchMakerByOAuth(subject, KAKAO);
+
+        return KakaoLoginDto.builder()
+                .oauthCode(KAKAO)
+                .accessToken(kakaoOAuthResponseDto.getAccess_token())
+                .refreshToken(kakaoOAuthResponseDto.getRefresh_token())
+                .userStatus(userForLogin.getUserStatus())
+                .credentialToken(userForLogin.getCredentialToken())
+                .matchMakerStatus(matchMakerForLogin.getMatchMakerStatus())
+                .build();
+    }
 
 
     @Transactional
@@ -184,8 +157,6 @@ public class KakaoLoginService {
                 .body(requestBody)
                 .retrieve();
     }
-
-
 
 
     private KakaoOAuthResponseDto requestOAuthToken(String authorizationCode, boolean forLogin) {

@@ -1,7 +1,7 @@
 package com.ndm.core.entity;
 
 import com.ndm.core.common.BaseEntity;
-import com.ndm.core.common.enums.MemberStatus;
+import com.ndm.core.common.enums.MatchMakerStatus;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.domain.message.dto.FCMTokenDto;
 import jakarta.persistence.*;
@@ -37,12 +37,12 @@ public class MatchMaker extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OAuthCode oauthCode;
 
-    @Column(name = "match_maker_token", length = 36, unique = true, nullable = false)
-    private String matchMakerToken;
+    @Column(name = "credential_token", length = 36, unique = true, nullable = false)
+    private String credentialToken;
 
     @Column(name = "member_status", length = 20)
     @Enumerated(EnumType.STRING)
-    private MemberStatus status;
+    private MatchMakerStatus status;
 
     @Column(name = "last_login_ip", length = 30)
     private String lastLoginIp;
@@ -71,8 +71,8 @@ public class MatchMaker extends BaseEntity {
         this.lastLoginIp = lastLoginIp;
     }
 
-    public void changeMatchMakerStatus(MemberStatus memberStatus) {
-        this.status = memberStatus;
+    public void changeMatchMakerStatus(MatchMakerStatus matchMakerStatus) {
+        this.status = matchMakerStatus;
     }
 
     public void registerFCMToken(FCMTokenDto token) {

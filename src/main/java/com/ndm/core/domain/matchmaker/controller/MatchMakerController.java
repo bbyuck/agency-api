@@ -86,4 +86,20 @@ public class MatchMakerController {
                 .data(matchMakerService.registerMatchMakerFCMToken(token))
                 .build();
     }
+
+
+    @Trace
+    @PostMapping("/matchmaker")
+    @Operation(summary = "주선자 등록", description = "주선자 등록")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<MatchMakerDto> registerMatchMaker() {
+        return Response.<MatchMakerDto>builder()
+                .data(matchMakerService.registerMatchMaker())
+                .build();
+    }
 }

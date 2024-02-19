@@ -1,11 +1,7 @@
 package com.ndm.core.entity;
 
 import com.ndm.core.common.BaseEntity;
-import com.ndm.core.common.enums.Gender;
-import com.ndm.core.common.enums.MBTI;
-import com.ndm.core.common.enums.OAuthCode;
-import com.ndm.core.common.enums.MemberStatus;
-import com.ndm.core.domain.user.dto.UserProfileDto;
+import com.ndm.core.common.enums.*;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.dto.UserProfileSummaryDto;
 import jakarta.persistence.*;
@@ -14,8 +10,6 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.ndm.core.common.enums.MemberStatus.NEW;
-import static com.ndm.core.common.enums.MemberStatus.WAIT;
 
 @Entity
 @Getter
@@ -44,8 +38,8 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OAuthCode oauthCode;
 
-    @Column(name = "user_token", length = 36, unique = true, nullable = false)
-    private String userToken;
+    @Column(name = "credential_token", length = 36, unique = true, nullable = false)
+    private String credentialToken;
 
     @Column(name = "age", length = 10)
     private String age;
@@ -77,7 +71,7 @@ public class User extends BaseEntity {
 
     @Column(name = "member_status", length = 20)
     @Enumerated(EnumType.STRING)
-    private MemberStatus status;
+    private UserStatus status;
 
     @Column(name = "gender", length = 1)
     @Enumerated(EnumType.STRING)
@@ -113,8 +107,8 @@ public class User extends BaseEntity {
         this.refreshToken = refreshToken;
     }
 
-    public void changeUserStatus(MemberStatus memberStatus) {
-        this.status = memberStatus;
+    public void changeUserStatus(UserStatus userStatus) {
+        this.status = userStatus;
     }
 
     public void updateProfileInfo(UserProfileDto userProfileDto) {
@@ -132,7 +126,7 @@ public class User extends BaseEntity {
 
     public void registerProfile(UserProfileDto userProfileDto) {
         updateProfileInfo(userProfileDto);
-        this.status = WAIT;
+        this.status = UserStatus.WAIT;
     }
     
     public UserProfileDto getUserProfileInfo() {
@@ -141,6 +135,7 @@ public class User extends BaseEntity {
                 .address(getAddress())
                 .smoking(isSmoking())
                 .mbti(getMbti())
+                .gender(getGender())
                 .height(getHeight())
                 .age(getAge())
                 .hobby(getHobby())

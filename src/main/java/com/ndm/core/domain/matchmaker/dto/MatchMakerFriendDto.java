@@ -1,6 +1,5 @@
-package com.ndm.core.domain.matching.dto;
+package com.ndm.core.domain.matchmaker.dto;
 
-import com.ndm.core.common.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MatchingRequestResultDto {
+public class MatchMakerFriendDto {
 
-    private UserStatus userStatus;
+    private Long id;
 }

@@ -1,18 +1,17 @@
 package com.ndm.core.domain.user.service;
 
-import com.ndm.core.common.enums.FriendshipStatus;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
-import com.ndm.core.domain.message.dto.FCMTokenDto;
+import com.ndm.core.domain.agreement.dto.AgreementDto;
 import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.friendship.repository.FriendshipRepository;
+import com.ndm.core.domain.matchmaker.dto.MatchMakerFriendDto;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
+import com.ndm.core.domain.message.dto.FCMTokenDto;
 import com.ndm.core.domain.user.dto.UserDto;
 import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.repository.UserRepository;
-import com.ndm.core.entity.Friendship;
-import com.ndm.core.entity.MatchMaker;
 import com.ndm.core.entity.User;
 import com.ndm.core.model.Current;
 import com.ndm.core.model.ErrorInfo;
@@ -25,10 +24,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static com.ndm.core.common.enums.MemberStatus.ACTIVE;
-import static com.ndm.core.common.enums.MemberStatus.PROFILE_MAKING;
+import static com.ndm.core.common.enums.UserStatus.PROFILE_MAKING;
+import static com.ndm.core.common.enums.UserStatus.TEMP;
+import static com.ndm.core.entity.QFriendship.friendship;
+import static com.ndm.core.entity.QMatchMaker.matchMaker;
 import static com.ndm.core.entity.QPhoto.photo;
 import static com.ndm.core.entity.QUser.user;
 import static com.ndm.core.model.ErrorInfo.*;
@@ -67,15 +70,15 @@ public class UserService {
         return result == null ?
                 UserDto.builder().build() :
                 UserDto.builder()
-                        .credentialToken(result.getUserToken())
+                        .credentialToken(result.getCredentialToken())
                         .accessToken(result.getAccessToken())
                         .refreshToken(result.getRefreshToken())
-                        .memberStatus(result.getStatus())
+                        .userStatus(result.getStatus())
                         .build();
     }
 
     public void login(UserDto userDto) {
-        Optional<User> optional = userRepository.findByUserToken(userDto.getCredentialToken());
+        Optional<User> optional = userRepository.findByCredentialToken(userDto.getCredentialToken());
 
         if (optional.isEmpty()) {
             log.error(ErrorInfo.INVALID_CREDENTIAL_TOKEN.getMessage());
@@ -86,45 +89,7 @@ public class UserService {
     }
 
     public UserDto join(UserDto userDto) {
-        String matchMakerCode = userDto.getMatchMakerCode();
-        /**
-         * 주선자 코드 확인
-         */
-        if (!StringUtils.hasText(matchMakerCode)) {
-            log.error("주선자 코드가 없습니다.");
-            throw new GlobalException(ErrorInfo.INVALID_MATCHMAKER_CODE);
-        }
-        Long matchMakerId;
-        try {
-            matchMakerId = Long.valueOf(rsaCrypto.decrypt(matchMakerCode));
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new GlobalException(ErrorInfo.INVALID_MATCHMAKER_CODE);
-        }
-
-        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findById(matchMakerId);
-        if (optionalMatchMaker.isEmpty() || optionalMatchMaker.get().getStatus() != ACTIVE) {
-            log.debug("입력한 코드로 주선자를 찾지 못했습니다. 코드를 다시 확인해주세요.");
-            throw new GlobalException(ErrorInfo.MATCHMAKER_NOT_FOUND);
-        }
-
-        /**
-         * 임시유저 조회
-         */
-        String decryptedOauthId = null;
-
-        try {
-            decryptedOauthId = rsaCrypto.decrypt(userDto.getOauthId());
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new GlobalException(ErrorInfo.INVALID_OAUTH_ID);
-        }
-
-        if (!agreementService.agreeWithAllEssential(userDto.getOauthCode(), decryptedOauthId)) {
-            log.error(ErrorInfo.DO_NOT_AGREE.getMessage());
-            throw new GlobalException(ErrorInfo.DO_NOT_AGREE);
-        }
-        Optional<User> user = userRepository.findByOauthCodeAndOauthId(userDto.getOauthCode(), decryptedOauthId);
+        Optional<User> user = userRepository.findByOauthCodeAndOauthId(userDto.getOauthCode(), userDto.getOauthId());
         if (user.isPresent()) {
             log.error(ErrorInfo.REGISTERED_MEMBER.getMessage());
             throw new GlobalException(ErrorInfo.REGISTERED_MEMBER);
@@ -133,30 +98,30 @@ public class UserService {
         User newUser = User.builder()
                 .accessToken(userDto.getAccessToken())
                 .refreshToken(userDto.getRefreshToken())
-                .userToken(commonUtil.issueMemberToken())
+                .credentialToken(userDto.getCredentialToken())
                 .oauthCode(userDto.getOauthCode())
-                .oauthId(decryptedOauthId)
-                .status(PROFILE_MAKING)
+                .oauthId(userDto.getOauthId())
+                .status(TEMP)
                 .build();
         userRepository.save(newUser);
 
         /**
          * 유저와 주선자간 관계 생성
          */
-        Friendship friendship = Friendship.builder()
-                .user(newUser)
-                .matchMaker(optionalMatchMaker.get())
-                .status(FriendshipStatus.ON)
-                .build();
-        friendshipRepository.save(friendship);
+//        Friendship friendship = Friendship.builder()
+//                .user(newUser)
+//                .matchMaker(optionalMatchMaker.get())
+//                .status(FriendshipStatus.ON)
+//                .build();
+//        friendshipRepository.save(friendship);
 
-        log.info("{}님 가입되었습니다.", newUser.getUserToken());
+        log.info("{}님 가입되었습니다.", newUser.getCredentialToken());
 
         return UserDto.builder()
-                .credentialToken(newUser.getUserToken())
+                .credentialToken(newUser.getCredentialToken())
                 .accessToken(newUser.getAccessToken())
                 .refreshToken(newUser.getRefreshToken())
-                .memberStatus(newUser.getStatus())
+                .userStatus(newUser.getStatus())
                 .build();
     }
 
@@ -167,7 +132,7 @@ public class UserService {
             caller = query
                     .select(user)
                     .from(user)
-                    .where(user.userToken.eq(current.getMemberCredentialToken())).fetchOne();
+                    .where(user.credentialToken.eq(current.getMemberCredentialToken())).fetchOne();
         }
         catch(NonUniqueResultException e) {
             log.error(e.getMessage(), e);
@@ -187,7 +152,7 @@ public class UserService {
 
 
     public UserProfileDto saveCallersProfile(UserProfileDto userProfileDto) {
-        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
         if (optional.isEmpty()) {
             log.error(ErrorInfo.INVALID_CREDENTIAL_TOKEN.getMessage());
             throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
@@ -231,7 +196,7 @@ public class UserService {
         User profileOwner = query.select(user)
                 .from(user).join(user.photos, photo)
                 .fetchJoin()
-                .where(user.userToken.eq(current.getMemberCredentialToken())).fetchOne();
+                .where(user.credentialToken.eq(current.getMemberCredentialToken())).fetchOne();
         if (profileOwner.getPhotos().size() < 2 || profileOwner.getPhotos().size() > 5) {
             throw new GlobalException(PHOTO_INVALID_SIZE);
         }
@@ -239,26 +204,26 @@ public class UserService {
 
 
         return UserDto.builder()
-                .memberStatus(profileOwner.getStatus())
+                .userStatus(profileOwner.getStatus())
                 .build();
     }
 
 
     @Transactional(readOnly = true)
     public UserDto findCaller() {
-        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
         if (optional.isEmpty()) {
             log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
             throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
         }
         User caller = optional.get();
         return UserDto.builder()
-                .memberStatus(caller.getStatus())
+                .userStatus(caller.getStatus())
                 .build();
     }
 
     public FCMTokenDto registerUserFCMToken(FCMTokenDto token) {
-        Optional<User> optional = userRepository.findByUserToken(current.getMemberCredentialToken());
+        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
 
         if (optional.isEmpty()) {
             log.error(USER_NOT_FOUND.getMessage());
@@ -271,6 +236,24 @@ public class UserService {
         return token;
     }
 
+    @Transactional(readOnly = true)
+    public List<MatchMakerFriendDto> findMatchMakerFriends() {
+        return query.select(friendship)
+                .from(friendship)
+                .join(friendship.user, user)
+                .fetchJoin()
+                .join(friendship.matchMaker, matchMaker)
+                .fetchJoin()
+                .where(friendship.user.credentialToken.eq(current.getMemberCredentialToken()))
+                .fetch()
+                .stream().map(
+                        friendshipEntity -> MatchMakerFriendDto
+                                .builder()
+                                .id(friendshipEntity.getId())
+                                .build()
+                )
+                .collect(Collectors.toList());
+    }
 //    public UserDto idJoin(UserDto newUserDto) {
 //        /**
 //         * User 가입 이력 확인

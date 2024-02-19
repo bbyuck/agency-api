@@ -23,7 +23,7 @@ public class ClientMessageService {
     private final WebSocketMemberSession webSocketMemberSession;
 
     public void sendMessage(ClientMessageCode clientMessageCode, MatchMaker target) {
-        String receiverSessionId = webSocketMemberSession.getSessionId(target.getMatchMakerToken());
+        String receiverSessionId = webSocketMemberSession.getSessionId(target.getCredentialToken());
         if (receiverSessionId != null) {
             try {
                 WebSocketSession webSocketSession = WebSocketHandler.CLIENTS.get(receiverSessionId);
@@ -40,7 +40,7 @@ public class ClientMessageService {
     }
 
     public void sendMessage(ClientMessageCode clientMessageCode, User target) {
-        String receiverSessionId = webSocketMemberSession.getSessionId(target.getUserToken());
+        String receiverSessionId = webSocketMemberSession.getSessionId(target.getCredentialToken());
         if (receiverSessionId != null) {
             try {
                 WebSocketSession webSocketSession = WebSocketHandler.CLIENTS.get(receiverSessionId);

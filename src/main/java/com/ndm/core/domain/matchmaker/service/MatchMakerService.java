@@ -1,16 +1,20 @@
 package com.ndm.core.domain.matchmaker.service;
 
-import com.ndm.core.common.enums.MemberStatus;
+import com.ndm.core.common.enums.MatchMakerStatus;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
-import com.ndm.core.domain.message.dto.FCMTokenDto;
+import com.ndm.core.domain.agreement.dto.AgreementDto;
 import com.ndm.core.domain.agreement.service.AgreementService;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
+import com.ndm.core.domain.matchmaker.dto.MatchMakerFriendDto;
+import com.ndm.core.domain.matchmaker.dto.MatchMakerInfoDto;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
+import com.ndm.core.domain.message.dto.FCMTokenDto;
 import com.ndm.core.domain.user.repository.UserRepository;
-import com.ndm.core.entity.MatchMaker;
+import com.ndm.core.entity.*;
 import com.ndm.core.model.Current;
+import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static com.ndm.core.entity.QFriendship.friendship;
 import static com.ndm.core.entity.QMatchMaker.matchMaker;
+import static com.ndm.core.entity.QUser.*;
 import static com.ndm.core.model.ErrorInfo.*;
 
 @Slf4j
@@ -48,7 +56,7 @@ public class MatchMakerService {
 
 
     public void login(MatchMakerDto matchMakerDto) {
-        Optional<MatchMaker> optional = matchMakerRepository.findByMatchMakerToken(matchMakerDto.getCredentialToken());
+        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(matchMakerDto.getCredentialToken());
 
         if (optional.isEmpty()) {
             log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
@@ -68,26 +76,17 @@ public class MatchMakerService {
         return result == null
                 ? MatchMakerDto.builder().build()
                 : MatchMakerDto.builder()
-                .credentialToken(result.getMatchMakerToken())
+                .credentialToken(result.getCredentialToken())
                 .accessToken(result.getAccessToken())
                 .refreshToken(result.getRefreshToken())
-                .memberStatus(result.getStatus())
+                .matchMakerStatus(result.getStatus())
                 .build();
     }
 
     public MatchMakerDto join(MatchMakerDto newMatchMakerDto) {
-        String decryptedOauthId = null;
-
-        try {
-            decryptedOauthId = rsaCrypto.decrypt(newMatchMakerDto.getOauthId());
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new GlobalException(INVALID_OAUTH_ID);
-        }
-
         // 1. 가입 이력 확인
         MatchMaker findMatchMaker = query.selectFrom(matchMaker)
-                .where(matchMaker.oauthId.eq(decryptedOauthId)
+                .where(matchMaker.oauthId.eq(newMatchMakerDto.getOauthId())
                         .and(matchMaker.oauthCode.eq(newMatchMakerDto.getOauthCode()))
                 ).fetchOne();
 
@@ -95,29 +94,24 @@ public class MatchMakerService {
             log.error(MEMBER_ALREADY_EXIST.getMessage());
             throw new GlobalException(MEMBER_ALREADY_EXIST);
         }
-        // 필수 동의서 모두 동의되어있는지 확인
-        if (!agreementService.agreeWithAllEssential(OAuthCode.KAKAO, decryptedOauthId)) {
-            log.error(DO_NOT_AGREE.getMessage());
-            throw new GlobalException(DO_NOT_AGREE);
-        }
 
         MatchMaker newMatchMaker = MatchMaker.builder()
-                .matchMakerToken(commonUtil.issueMemberToken())
+                .credentialToken(newMatchMakerDto.getCredentialToken())
                 .oauthCode(newMatchMakerDto.getOauthCode())
-                .oauthId(decryptedOauthId)
+                .oauthId(newMatchMakerDto.getOauthId())
                 .accessToken(newMatchMakerDto.getAccessToken())
                 .refreshToken(newMatchMakerDto.getRefreshToken())
                 .lastLoginIp(current.getClientIp())
-                .status(MemberStatus.WAIT)
+                .status(MatchMakerStatus.TEMP)
                 .build();
         matchMakerRepository.save(newMatchMaker);
 
 
         return MatchMakerDto.builder()
-                .credentialToken(newMatchMaker.getMatchMakerToken())
+                .credentialToken(newMatchMaker.getCredentialToken())
                 .accessToken(newMatchMaker.getAccessToken())
                 .refreshToken(newMatchMaker.getRefreshToken())
-                .memberStatus(newMatchMaker.getStatus())
+                .matchMakerStatus(newMatchMaker.getStatus())
                 .build();
     }
 
@@ -168,7 +162,7 @@ public class MatchMakerService {
 
     @Transactional(readOnly = true)
     public String getCode() {
-        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findByMatchMakerToken(current.getMemberCredentialToken());
+        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
 
         if (optionalMatchMaker.isEmpty()) {
             throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
@@ -192,19 +186,19 @@ public class MatchMakerService {
 
     @Transactional(readOnly = true)
     public MatchMakerDto findCaller() {
-        Optional<MatchMaker> optional = matchMakerRepository.findByMatchMakerToken(current.getMemberCredentialToken());
+        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
         if (optional.isEmpty()) {
             log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
             throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
         }
         MatchMaker caller = optional.get();
         return MatchMakerDto.builder()
-                .memberStatus(caller.getStatus())
+                .matchMakerStatus(caller.getStatus())
                 .build();
     }
 
     public FCMTokenDto registerMatchMakerFCMToken(FCMTokenDto token) {
-        Optional<MatchMaker> optional = matchMakerRepository.findByMatchMakerToken(current.getMemberCredentialToken());
+        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
 
         if (optional.isEmpty()) {
             log.error(MATCHMAKER_NOT_FOUND.getMessage());
@@ -217,4 +211,20 @@ public class MatchMakerService {
 
         return token;
     }
+
+    public MatchMakerDto registerMatchMaker() {
+        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
+        if (optional.isEmpty()) {
+            log.error(MATCHMAKER_NOT_FOUND.getMessage());
+            throw new GlobalException(MATCHMAKER_NOT_FOUND);
+        }
+        MatchMaker caller = optional.get();
+
+        caller.changeMatchMakerStatus(MatchMakerStatus.WAIT);
+
+        return MatchMakerDto.builder()
+                .matchMakerStatus(caller.getStatus())
+                .build();
+    }
+
 }

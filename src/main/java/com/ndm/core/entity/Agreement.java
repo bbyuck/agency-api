@@ -34,12 +34,8 @@ public class Agreement extends BaseEntity {
     @Column(name = "agreement_id", unique = true, nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "member_id")
-    private Long memberId;
-
-    @Column(name = "member_code", length = 20)
-    @Enumerated(EnumType.STRING)
-    private MemberCode memberCode;
+    @Column(name = "credential_token", length = 36)
+    private String credentialToken;
 
     @Column(name = "oauth_id", length = 40)
     private String oauthId;
@@ -61,8 +57,4 @@ public class Agreement extends BaseEntity {
         this.agree = agree;
     }
 
-    public void mappingTo(MemberCode memberCode, Long memberId) {
-        this.memberCode = memberCode;
-        this.memberId = memberId;
-    }
 }
