@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserProfileDto {
 
+    @Builder.Default
     private boolean exist = true;
 
     private Long id;

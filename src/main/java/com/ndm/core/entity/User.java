@@ -95,6 +95,7 @@ public class User extends BaseEntity {
     private List<Friendship> friendships = new ArrayList<>();
 
     @OneToMany(mappedBy = "owner")
+    @Builder.Default
     private List<Photo> photos = new ArrayList<>();
 
     public void registerFCMToken(String token) {

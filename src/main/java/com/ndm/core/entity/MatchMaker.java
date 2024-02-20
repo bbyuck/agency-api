@@ -58,6 +58,7 @@ public class MatchMaker extends BaseEntity {
 
     // ====== 일대다 연관관계 매핑 =====
     @OneToMany(mappedBy = "matchMaker")
+    @Builder.Default
     private List<Friendship> friendships = new ArrayList<>();
 
     // ====== 유저 편의 메서드 =======
