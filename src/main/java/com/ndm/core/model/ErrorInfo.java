@@ -87,6 +87,7 @@ public enum ErrorInfo {
     MATCHING_REQUEST_NOT_FOUND(400, "MATCHING_REQUEST_NOT_FOUND", "매칭 요청을 찾을 수 없습니다."),
     MATCHING_NOT_FOUND(400, "MATCHING_NOT_FOUND", "매칭을 찾을 수 없습니다. 관리자에게 문의해주세요."),
     FRIENDSHIP_NOT_FOUND(400, "FRIENDSHIP_NOT_FOUND", "연관된 주선자 관계를 찾을 수 없습니다. 관리자에게 문의해주세요."),
+    FRIENDSHIP_ALREAD_EXIST(400, "FRIENDSHIP_ALREAD_EXIST", "이미 주선자로 추가된 멤버입니다."),
     // =================== FCM push 알림 관련 =================
     FCM_TOKEN_NOT_FOUND(400, "FCM_TOKEN_NOT_FOUND", "FCM 토큰을 찾을 수 없습니다."),
     ;

@@ -102,6 +102,4 @@ public class MatchMakerController {
                 .data(matchMakerService.registerMatchMaker())
                 .build();
     }
-
-
 }

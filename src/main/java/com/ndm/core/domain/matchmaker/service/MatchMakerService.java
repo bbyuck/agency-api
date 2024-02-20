@@ -180,8 +180,7 @@ public class MatchMakerService {
     @Transactional(readOnly = true)
     public String getUriWithCode() {
         String code = URLEncoder.encode(getCode(), StandardCharsets.UTF_8);
-
-        return clientLocation + "?matchmaker=" + code;
+        return clientLocation + "/user/friend?matchmaker=" + code;
     }
 
     @Transactional(readOnly = true)

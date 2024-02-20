@@ -44,6 +44,6 @@ public class Friendship extends BaseEntity {
 
         matchMaker.getFriendships().add(this);
         user.getFriendships().add(this);
-
     }
+
 }
