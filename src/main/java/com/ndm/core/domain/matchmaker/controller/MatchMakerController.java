@@ -6,6 +6,7 @@ import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerInfoDto;
 import com.ndm.core.domain.matchmaker.service.MatchMakerService;
 import com.ndm.core.domain.user.dto.UserInfoDto;
+import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.model.Response;
 import com.ndm.core.model.Trace;
 import com.ndm.core.model.TraceData;
@@ -17,6 +18,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @V1
 @RestController
@@ -57,10 +60,10 @@ public class MatchMakerController {
 
     @Trace
     @GetMapping("/matchmaker/info/my")
-    @Operation(summary = "요청자의 유저 정보 조회", description = "요청자의 유저 정보 조회")
+    @Operation(summary = "요청자의 멤버 정보 조회", description = "요청자의 멤버 정보 조회")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "SUCCESS"
-                    , content = @Content(schema = @Schema(implementation = UserInfoDto.class))),
+                    , content = @Content(schema = @Schema(implementation = MatchMakerInfoDto.class))),
             @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
@@ -100,6 +103,21 @@ public class MatchMakerController {
     public Response<MatchMakerDto> registerMatchMaker() {
         return Response.<MatchMakerDto>builder()
                 .data(matchMakerService.registerMatchMaker())
+                .build();
+    }
+
+    @Trace
+    @GetMapping("/matchmaker/user")
+    @Operation(summary = "요청을 보낸 주선자와 Friendship관계가 있는 유저 목록 조회", description = "요청을 보낸 주선자와 Friendship관계가 있는 유저 목록 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "유저 정보 조회 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<List<UserProfileDto>> getAllUserProfilesFromMyPool() {
+        return Response.<List<UserProfileDto>>builder()
+                .data(matchMakerService.findAllUserProfilesFromCallersPool())
                 .build();
     }
 }

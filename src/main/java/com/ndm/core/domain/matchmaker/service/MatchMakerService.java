@@ -4,17 +4,15 @@ import com.ndm.core.common.enums.MatchMakerStatus;
 import com.ndm.core.common.enums.OAuthCode;
 import com.ndm.core.common.util.CommonUtil;
 import com.ndm.core.common.util.RSACrypto;
-import com.ndm.core.domain.agreement.dto.AgreementDto;
 import com.ndm.core.domain.agreement.service.AgreementService;
+import com.ndm.core.domain.friendship.service.FriendshipService;
 import com.ndm.core.domain.matchmaker.dto.MatchMakerDto;
-import com.ndm.core.domain.matchmaker.dto.MatchMakerFriendDto;
-import com.ndm.core.domain.matchmaker.dto.MatchMakerInfoDto;
 import com.ndm.core.domain.matchmaker.repository.MatchMakerRepository;
 import com.ndm.core.domain.message.dto.FCMTokenDto;
+import com.ndm.core.domain.user.dto.UserProfileDto;
 import com.ndm.core.domain.user.repository.UserRepository;
 import com.ndm.core.entity.*;
 import com.ndm.core.model.Current;
-import com.ndm.core.model.ErrorInfo;
 import com.ndm.core.model.exception.GlobalException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +27,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.ndm.core.entity.QFriendship.friendship;
+import static com.ndm.core.entity.QFriendship.*;
 import static com.ndm.core.entity.QMatchMaker.matchMaker;
-import static com.ndm.core.entity.QUser.*;
+import static com.ndm.core.entity.QUser.user;
 import static com.ndm.core.model.ErrorInfo.*;
 
 @Slf4j
@@ -226,4 +224,21 @@ public class MatchMakerService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public List<UserProfileDto> findAllUserProfilesFromCallersPool() {
+        return query.select(friendship)
+                .from(friendship)
+                .join(friendship.matchMaker, matchMaker).fetchJoin()
+                .join(friendship.user, user).fetchJoin()
+                .where(friendship.matchMaker.credentialToken.eq(current.getMemberCredentialToken()))
+                .fetch().stream().map(friendshipEntity -> UserProfileDto.builder()
+                        .id(friendshipEntity.getUser().getId())
+                        .gender(friendshipEntity.getUser().getGender())
+                        .age(friendshipEntity.getUser().getAge())
+                        .address(friendshipEntity.getUser().getAddress())
+                        .job(friendshipEntity.getUser().getJob())
+                        .height(friendshipEntity.getUser().getHeight())
+                        .userStatus(friendshipEntity.getUser().getStatus())
+                        .build()).collect(Collectors.toList());
+    }
 }
