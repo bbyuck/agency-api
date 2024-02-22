@@ -138,7 +138,7 @@ public class User extends BaseEntity {
                 .mbti(getMbti())
                 .gender(getGender())
                 .height(getHeight())
-                .age(getAge())
+                .age(getAge().concat("년생"))
                 .hobby(getHobby())
                 .job(getJob())
                 .idealType(getIdealType())
