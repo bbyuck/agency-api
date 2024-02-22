@@ -254,6 +254,23 @@ public class UserService {
                 )
                 .collect(Collectors.toList());
     }
+
+
+    public UserDto joinToService() {
+        Optional<User> userOptional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
+
+        if (userOptional.isEmpty()) {
+            log.error(USER_NOT_FOUND.getMessage());
+            throw new GlobalException(USER_NOT_FOUND);
+        }
+
+        User caller = userOptional.get();
+        caller.changeUserStatus(PROFILE_MAKING);
+
+        return UserDto.builder()
+                .userStatus(caller.getStatus())
+                .build();
+    }
 //    public UserDto idJoin(UserDto newUserDto) {
 //        /**
 //         * User 가입 이력 확인

@@ -133,13 +133,28 @@ public class UserController {
     @Operation(summary = "주선자 친구 목록 조회", description = "주선자 친구 목록 조회")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "SUCCESS"
-                    , content = @Content(schema = @Schema(implementation = String.class))),
+                    , content = @Content(schema = @Schema(implementation = List.class))),
             @ApiResponse(responseCode = "500", description = "주선자 친구 목록 조회 실패 - 사유 코드 참조"
                     , content = @Content(schema = @Schema(implementation = TraceData.class)))
     })
     public Response<List<MatchMakerFriendDto>> registerUserFCMToken() {
         return Response.<List<MatchMakerFriendDto>>builder()
                 .data(userService.findMatchMakerFriends())
+                .build();
+    }
+
+    @Trace
+    @PostMapping("/user")
+    @Operation(summary = "유저가 서비스에 조인 프로필 만들기 상태로 변경된다.", description = "유저가 서비스에 조인하고 프로필 만들기 상태로 변경된다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SUCCESS"
+                    , content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "500", description = "유저 상태변경 실패 - 사유 코드 참조"
+                    , content = @Content(schema = @Schema(implementation = TraceData.class)))
+    })
+    public Response<UserDto> joinUser() {
+        return Response.<UserDto>builder()
+                .data(userService.joinToService())
                 .build();
     }
 }
