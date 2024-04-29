@@ -65,20 +65,17 @@ public class MatchingService {
 
         // 1. 이전에 요청읇 보냈거나 매칭된 적이 있는지 여부 확인
         // 1.1. 서로가 서로에게 요청을 보낸적이 있는지 확인
-        Optional<User> senderOptional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (senderOptional.isEmpty()) {
-            log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
-        }
-        User sender = senderOptional.get();
+        User sender = userRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.USER_NOT_FOUND);
+                });
 
-        Optional<User> receiverOptional = userRepository.findById(requestDto.getId());
-        if (receiverOptional.isEmpty()) {
-            log.error(ErrorInfo.OPPONENT_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.OPPONENT_NOT_FOUND);
-        }
-        User receiver = receiverOptional.get();
-
+        User receiver = userRepository.findById(requestDto.getId())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.OPPONENT_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.OPPONENT_NOT_FOUND);
+                });
 
         List<MatchingRequest> matchingRequestLog = query.select(matchingRequest)
                 .from(matchingRequest)
@@ -177,7 +174,7 @@ public class MatchingService {
         User receiver = receivedMatchingRequest.getReceiver();
 
         List<Friendship> findSenderFriendship = selectMappedFriendship(sender);
-        List<Friendship> findReceiverFriendship  = selectMappedFriendship(receiver);
+        List<Friendship> findReceiverFriendship = selectMappedFriendship(receiver);
 
         /**
          * v1 -> 주선자 계정 1명
@@ -320,12 +317,11 @@ public class MatchingService {
     }
 
     public MatchingResponseDto confirmMatching() {
-        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (optional.isEmpty()) {
-            log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
-        }
-        User caller = optional.get();
+        User caller = userRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.USER_NOT_FOUND);
+                });
 
         List<Matching> findMatching = query.select(matching)
                 .from(matching)
@@ -349,12 +345,11 @@ public class MatchingService {
 
     @Transactional(readOnly = true)
     public MatchingInfoDto getMatchingInfo() {
-        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (optional.isEmpty()) {
-            log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
-        }
-        User caller = optional.get();
+        User caller = userRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.USER_NOT_FOUND);
+                });
 
         List<Matching> findMatching = query.select(matching)
                 .from(matching)
@@ -396,12 +391,11 @@ public class MatchingService {
          * 2.2. 상대에게 알림 발송
          * 2.3. MatchingStatus 변경
          */
-        Optional<Matching> optional = matchingRepository.findById(matchingDto.getId());
-        if (optional.isEmpty()) {
-            log.error(ErrorInfo.MATCHING_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.MATCHING_NOT_FOUND);
-        }
-        Matching currentMatching = optional.get();
+        Matching currentMatching = matchingRepository.findById(matchingDto.getId())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.MATCHING_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.MATCHING_NOT_FOUND);
+                });
 
         MatchingRelation relation = currentMatching.getRelation(current.getMemberCredentialToken());
 
@@ -410,15 +404,14 @@ public class MatchingService {
 
         caller.changeUserStatus(MATCHING_ACCEPTED);
 
-        if (caller.getStatus() == MATCHING_ACCEPTED && opponent.getStatus() == MATCHING_ACCEPTED) {
+        if (MATCHING_ACCEPTED == caller.getStatus() && MATCHING_ACCEPTED == opponent.getStatus()) {
             // 2.1. 양쪽 주선자에게 알림 발송
             MatchMaker manMatchMaker = currentMatching.getManMatchMaker();
             MatchMaker womanMatchMaker = currentMatching.getWomanMatchMaker();
 
             if (manMatchMaker == womanMatchMaker) {
                 clientMessageService.sendMessage(ClientMessageCode.M_MATCHING_SUCCESS, manMatchMaker);
-            }
-            else {
+            } else {
                 clientMessageService.sendMessage(ClientMessageCode.M_MATCHING_SUCCESS, manMatchMaker);
                 clientMessageService.sendMessage(ClientMessageCode.M_MATCHING_SUCCESS, womanMatchMaker);
             }
@@ -441,13 +434,11 @@ public class MatchingService {
          * 2. 양쪽 유저 Status 변경
          * 3. 상대에게 매칭 cancel 알림
          */
-        Optional<Matching> optional = matchingRepository.findById(matchingDto.getId());
-        if (optional.isEmpty()) {
-            log.error(ErrorInfo.MATCHING_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.MATCHING_NOT_FOUND);
-        }
-
-        Matching currentMatching = optional.get();
+        Matching currentMatching = matchingRepository.findById(matchingDto.getId())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.MATCHING_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.MATCHING_NOT_FOUND);
+                });
         currentMatching.cancel();
 
         MatchingRelation relation = currentMatching.getRelation(current.getMemberCredentialToken());

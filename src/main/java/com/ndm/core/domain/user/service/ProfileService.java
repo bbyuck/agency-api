@@ -72,7 +72,7 @@ public class ProfileService {
                 }).toList();
 
 
-        List<Friendship> candidateFriendShips = query.select(friendship)
+        return query.select(friendship)
                 .from(friendship)
                 .join(friendship.user, user)
                 .fetchJoin()
@@ -82,12 +82,10 @@ public class ProfileService {
                         .and(friendship.user.status.eq(UserStatus.ACTIVE))
                         .and(friendship.user.notIn(requestedList))
                 )
-                .fetch();
-
-
-        return candidateFriendShips.stream().map(
-                entity -> entity.getUser().getUserProfileSummary()
-        ).collect(Collectors.toList());
+                .fetch()
+                .stream().map(
+                        entity -> entity.getUser().getUserProfileSummary()
+                ).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -109,6 +107,7 @@ public class ProfileService {
             log.error(FORBIDDEN.getMessage());
             throw new GlobalException(FORBIDDEN);
         }
+        assert targetUserAndMatchMakerFriendship != null;
         User targetUser = targetUserAndMatchMakerFriendship.getUser();
 
         /**

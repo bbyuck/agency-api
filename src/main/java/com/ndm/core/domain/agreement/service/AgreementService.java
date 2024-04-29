@@ -1,9 +1,7 @@
 package com.ndm.core.domain.agreement.service;
 
 import com.ndm.core.common.enums.MatchMakerStatus;
-import com.ndm.core.common.enums.MemberCode;
 import com.ndm.core.common.enums.UserStatus;
-import com.ndm.core.common.util.RSACrypto;
 import com.ndm.core.domain.agreement.dto.AgreementDto;
 import com.ndm.core.domain.agreement.dto.TempMemberDto;
 import com.ndm.core.domain.agreement.repository.AgreementRepository;
@@ -41,6 +39,12 @@ public class AgreementService {
     private final Current current;
 
 
+    /**
+     * 동의서 제출
+     *
+     * @param agreementDto
+     * @return
+     */
     public TempMemberDto submitAgreement(AgreementDto agreementDto) {
         for (AgreementDto.AgreementInnerDto agreementInnerDto : agreementDto.getAgreements()) {
             if (agreementInnerDto.getAgreementCode() == null) {
@@ -51,74 +55,64 @@ public class AgreementService {
                 throw new GlobalException(ErrorInfo.DO_NOT_AGREE);
             }
 
-            Optional<Agreement> optional = agreementRepository.findByCodeAndCredentialToken(agreementInnerDto.getAgreementCode(), current.getMemberCredentialToken());
-            if (optional.isEmpty()) {
-                throw new GlobalException(ErrorInfo.AGREEMENT_NOT_FOUND);
-            }
-
-            Agreement agreement = optional.get();
-            agreement.writeAgreement(agreementInnerDto.getAgreementCode(), agreementInnerDto.isAgree());
+            agreementRepository
+                    .findByCodeAndCredentialToken(agreementInnerDto.getAgreementCode(), current.getMemberCredentialToken())
+                    .orElseThrow(() -> new GlobalException(ErrorInfo.AGREEMENT_NOT_FOUND))
+                    .writeAgreement(agreementInnerDto.getAgreementCode(), agreementInnerDto.isAgree());
         }
 
-        Optional<User> userOptional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (userOptional.isEmpty()) {
-            log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
-        }
-        User callerUser = userOptional.get();
+        User callerUser = userRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.USER_NOT_FOUND);
+                });
+
         callerUser.changeUserStatus(UserStatus.NEW);
 
-        Optional<MatchMaker> matchMakerOptional = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (matchMakerOptional.isEmpty()) {
-            log.error(ErrorInfo.MATCHMAKER_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.MATCHMAKER_NOT_FOUND);
-        }
-        MatchMaker callerMatchMaker = matchMakerOptional.get();
+        MatchMaker callerMatchMaker = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.MATCHMAKER_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.MATCHMAKER_NOT_FOUND);
+                });
         callerMatchMaker.changeMatchMakerStatus(MatchMakerStatus.NEW);
 
-        try {
-            return TempMemberDto.builder()
-                    .oauthCode(agreementDto.getOauthCode())
-                    .oauthId(agreementDto.getOauthId())
-                    .userStatus(callerUser.getStatus())
-                    .matchMakerStatus(callerMatchMaker.getStatus())
-                    .build();
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new GlobalException(ErrorInfo.INTERNAL_SERVER_ERROR);
-        }
+        return TempMemberDto.builder()
+                .oauthCode(agreementDto.getOauthCode())
+                .oauthId(agreementDto.getOauthId())
+                .userStatus(callerUser.getStatus())
+                .matchMakerStatus(callerMatchMaker.getStatus())
+                .build();
     }
 
     /**
      * 필수로 받아야 하는 동의서 코드 목록에 있는 동의서 데이터를 모두 생성한다.
+     * 만약 이미 생성되어 있는 동의서가 있을 경우 생성하지 않는다.
      *
      * @param agreementDto
      */
     public void createAgreement(AgreementDto agreementDto) {
         Agreement.ESSENTIAL_LIST.forEach((ESSENTIAL_AGREEMENT) -> {
-            Optional<Agreement> optional = agreementRepository.findByOauthCodeAndOauthIdAndCode(agreementDto.getOauthCode(), agreementDto.getOauthId(), ESSENTIAL_AGREEMENT);
-            if (optional.isPresent()) {
-                return;
-            }
-
-            Agreement agreement = Agreement.builder()
-                    .oauthCode(agreementDto.getOauthCode())
-                    .oauthId(agreementDto.getOauthId())
-                    .credentialToken(agreementDto.getCredentialToken())
-                    .code(ESSENTIAL_AGREEMENT)
-                    .build();
-            agreementRepository.save(agreement);
+            agreementRepository
+                    .findByOauthCodeAndOauthIdAndCode(agreementDto.getOauthCode(), agreementDto.getOauthId(), ESSENTIAL_AGREEMENT)
+                    .ifPresentOrElse(null, () -> {
+                        Agreement agreement = Agreement.builder()
+                                .oauthCode(agreementDto.getOauthCode())
+                                .oauthId(agreementDto.getOauthId())
+                                .credentialToken(agreementDto.getCredentialToken())
+                                .code(ESSENTIAL_AGREEMENT)
+                                .build();
+                        agreementRepository.save(agreement);
+                    });
         });
     }
 
     @Transactional(readOnly = true)
     public boolean agreementCreated(AgreementDto agreementDto) {
-        List<Agreement> result =
-                query.selectFrom(agreement).distinct()
-                        .where(agreement.code.in(Agreement.ESSENTIAL_LIST)
-                                .and(agreement.oauthId.eq(agreementDto.getOauthId()))
-                                .and(agreement.oauthCode.eq(agreementDto.getOauthCode()))).fetch();
-        return result.size() == Agreement.ESSENTIAL_LIST.size();
+        Long resultSize = query.select(agreement.count()).from(agreement).distinct()
+                .where(agreement.code.in(Agreement.ESSENTIAL_LIST)
+                        .and(agreement.oauthId.eq(agreementDto.getOauthId()))
+                        .and(agreement.oauthCode.eq(agreementDto.getOauthCode()))).fetchFirst();
+        return Math.toIntExact(resultSize) == Agreement.ESSENTIAL_LIST.size();
     }
 
     @Transactional(readOnly = true)
@@ -130,30 +124,4 @@ public class AgreementService {
                                 .and(agreement.credentialToken.eq(current.getMemberCredentialToken()))).fetch();
         return result.size() == Agreement.ESSENTIAL_LIST.size();
     }
-
-    private static void checkUserAuth(AgreementDto agreementDto) {
-        if (agreementDto.getOauthCode() == null
-                || !StringUtils.hasText(agreementDto.getOauthId())) {
-            throw new GlobalException(ErrorInfo.INVALID_OAUTH_ID);
-        }
-    }
-
-//    @Transactional(readOnly = true)
-//    public AgreementDto findCallersAgreement(AgreementDto agreementDto) {
-//        checkUserAuth(agreementDto);
-//        Optional<Agreement> optional;
-//        try {
-//            optional = agreementRepository.findByOauthCodeAndOauthId(agreementDto.getOauthCode(), rsaCrypto.decrypt(agreementDto.getOauthId()));
-//        }
-//        catch (Exception e) {
-//            log.error(ErrorInfo.INTERNAL_SERVER_ERROR.getMessage());
-//            throw new GlobalException(ErrorInfo.INTERNAL_SERVER_ERROR);
-//        }
-//        if (optional.isEmpty()) {
-//            log.error("생성된 동의서가 없습니다.");
-//            throw new GlobalException(ErrorInfo.INTERNAL_SERVER_ERROR);
-//        }
-//
-//        Agreement callersAgreement = optional.get();
-//    }
 }

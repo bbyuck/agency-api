@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.IIOImage;
@@ -84,7 +85,7 @@ public class FileService {
     public void upload(MultipartFile file) {
         LocalDateTime now = LocalDateTime.now();
 
-        if (file.getOriginalFilename() == null) {
+        if (!StringUtils.hasText(file.getOriginalFilename())) {
             throw new GlobalException(ErrorInfo.FILE_UPLOAD);
         }
 
@@ -93,14 +94,11 @@ public class FileService {
             throw new GlobalException(ErrorInfo.NOT_SUPPORTED_FILE_EXTENSION);
         }
 
-        Optional<User> optional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (optional.isEmpty()) {
-            log.error("잘못된 유저 credential token입니다.");
-            throw new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
-        }
-
-
-        User owner = optional.get();
+        User owner = userRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error("잘못된 유저 credential token입니다.");
+                    return new GlobalException(ErrorInfo.INVALID_CREDENTIAL_TOKEN);
+                });
 
         String fileName = "img_" + now.getHour() + now.getMinute() + now.getSecond() + "." + ext;
         String compressedFilePath = getCompressedFilePath(now);
@@ -112,16 +110,6 @@ public class FileService {
         writeFile(file, filePath, fullFilePath);
         compressImage(fullFilePath, compressedFilePath, compressedFullFilePath, ext);
         saveFileInfo(file, owner, fullFilePath);
-
-//        try(FileOutputStream fos = new FileOutputStream()) {
-//            byte[] data = file.getBytes();
-//
-//
-//        }
-//        catch(IOException e) {
-//            log.error(e.getMessage(), e);
-//            throw new GlobalException(ErrorInfo.FILE_UPLOAD);
-//        }
     }
 
     private FileInfoDto saveFileInfo(MultipartFile file, User owner, String fullFilePath) {
@@ -154,34 +142,11 @@ public class FileService {
 
     @Transactional(readOnly = true)
     public FileResponseDto getMyFileData() {
-        List<Photo> callersPhotoList = query
-                .select(photo)
-                .from(photo)
-                .where(photo.owner.credentialToken.eq(current.getMemberCredentialToken()))
-                .fetch();
-
-        FileResponseDto fileResponseDto = new FileResponseDto();
-
-        callersPhotoList.forEach(photo -> {
-            try (FileInputStream fis = new FileInputStream(getCompressedFilePath(photo.getFilePath()));
-                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                int length;
-
-                byte[] buffer = new byte[512];
-                while ((length = fis.read(buffer)) != -1) {
-                    bos.write(buffer, 0, length);
-                }
-
-                fileResponseDto.getPhotoDataList().add(new PhotoData(photo.getId(), bos.toByteArray()));
-            } catch (IOException e) {
-                log.error(e.getMessage(), e);
-                throw new GlobalException(ErrorInfo.FILE_GET);
-            }
-        });
-
-        return fileResponseDto;
+        User caller = userRepository.findByCredentialToken(current.getMemberCredentialToken()).orElseThrow(() -> new GlobalException(ErrorInfo.USER_NOT_FOUND));
+        return getFileData(caller);
     }
 
+    @Transactional(readOnly = true)
     public FileResponseDto getFileData(User owner) {
         FileResponseDto fileResponseDto = new FileResponseDto();
 

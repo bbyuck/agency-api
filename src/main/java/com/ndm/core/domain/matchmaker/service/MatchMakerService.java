@@ -54,14 +54,12 @@ public class MatchMakerService {
 
 
     public void login(MatchMakerDto matchMakerDto) {
-        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(matchMakerDto.getCredentialToken());
-
-        if (optional.isEmpty()) {
-            log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
-            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
-        }
-        MatchMaker matchMaker = optional.get();
-        matchMaker.updateLoginInfo(matchMakerDto.getAccessToken(), matchMakerDto.getRefreshToken(), current.getClientIp());
+        matchMakerRepository.findByCredentialToken(matchMakerDto.getCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
+                    return new GlobalException(INVALID_CREDENTIAL_TOKEN);
+                })
+                .updateLoginInfo(matchMakerDto.getAccessToken(), matchMakerDto.getRefreshToken(), current.getClientIp());
     }
 
     @Transactional(readOnly = true)
@@ -113,7 +111,10 @@ public class MatchMakerService {
                 .build();
     }
 
-
+    /**
+     * ID/PW 기반 join 메소드
+     * @param matchMakerName
+     */
 //    public MatchMakerDto join(MatchMakerDto newMatchMakerDto) {
 //        /**
 //         * MatchMakerName validation
@@ -160,14 +161,11 @@ public class MatchMakerService {
 
     @Transactional(readOnly = true)
     public String getCode() {
-        Optional<MatchMaker> optionalMatchMaker = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
-
-        if (optionalMatchMaker.isEmpty()) {
-            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
-        }
+        MatchMaker matchMaker = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> new GlobalException(INVALID_CREDENTIAL_TOKEN));
 
         try {
-            return rsaCrypto.encrypt(String.valueOf(optionalMatchMaker.get().getId()));
+            return rsaCrypto.encrypt(String.valueOf(matchMaker.getId()));
         } catch (Exception e) {
             log.error("암호화 도중 에러가 발생했습니다.");
             log.error(e.getMessage(), e);
@@ -175,7 +173,6 @@ public class MatchMakerService {
         }
     }
 
-    @Transactional(readOnly = true)
     public String getUriWithCode() {
         String code = URLEncoder.encode(getCode(), StandardCharsets.UTF_8);
         return clientLocation + "/user/friend?matchmaker=" + code;
@@ -183,42 +180,34 @@ public class MatchMakerService {
 
     @Transactional(readOnly = true)
     public MatchMakerDto findCaller() {
-        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (optional.isEmpty()) {
-            log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
-            throw new GlobalException(INVALID_CREDENTIAL_TOKEN);
-        }
-        MatchMaker caller = optional.get();
+        MatchMaker caller = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(INVALID_CREDENTIAL_TOKEN.getMessage());
+                    return new GlobalException(INVALID_CREDENTIAL_TOKEN);
+                });
         return MatchMakerDto.builder()
                 .matchMakerStatus(caller.getStatus())
                 .build();
     }
 
     public FCMTokenDto registerMatchMakerFCMToken(FCMTokenDto token) {
-        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
-
-        if (optional.isEmpty()) {
-            log.error(MATCHMAKER_NOT_FOUND.getMessage());
-            throw new GlobalException(MATCHMAKER_NOT_FOUND);
-        }
-
-        MatchMaker caller = optional.get();
-
-        caller.registerFCMToken(token);
+        matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(MATCHMAKER_NOT_FOUND.getMessage());
+                    return new GlobalException(MATCHMAKER_NOT_FOUND);
+                }).registerFCMToken(token);
 
         return token;
     }
 
     public MatchMakerDto registerMatchMaker() {
-        Optional<MatchMaker> optional = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (optional.isEmpty()) {
-            log.error(MATCHMAKER_NOT_FOUND.getMessage());
-            throw new GlobalException(MATCHMAKER_NOT_FOUND);
-        }
-        MatchMaker caller = optional.get();
+        MatchMaker caller = matchMakerRepository.findByCredentialToken(current.getMemberCredentialToken())
+                .orElseThrow(() -> {
+                    log.error(MATCHMAKER_NOT_FOUND.getMessage());
+                    return new GlobalException(MATCHMAKER_NOT_FOUND);
+                });
 
         caller.changeMatchMakerStatus(MatchMakerStatus.WAIT);
-
         return MatchMakerDto.builder()
                 .matchMakerStatus(caller.getStatus())
                 .build();

@@ -9,7 +9,6 @@ import java.util.Optional;
 
 public interface AgreementRepository extends JpaRepository<Agreement, Long> {
 
-    Optional<Agreement> findByOauthCodeAndOauthId(OAuthCode oauthCode, String oauthId);
 
     Optional<Agreement> findByCodeAndCredentialToken(AgreementCode agreementCode, String credentialToken);
 

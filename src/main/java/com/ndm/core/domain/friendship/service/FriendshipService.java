@@ -42,12 +42,10 @@ public class FriendshipService {
         /**
          * 1. 유저 확인
          */
-        Optional<User> userOptional = userRepository.findByCredentialToken(current.getMemberCredentialToken());
-        if (userOptional.isEmpty()) {
+        User caller = userRepository.findByCredentialToken(current.getMemberCredentialToken()).orElseThrow(() -> {
             log.error(ErrorInfo.USER_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.USER_NOT_FOUND);
-        }
-        User caller = userOptional.get();
+            return new GlobalException(ErrorInfo.USER_NOT_FOUND);
+        });
 
         /**
          * 2. 주선자 확인
@@ -60,12 +58,12 @@ public class FriendshipService {
             log.error(ErrorInfo.INVALID_MATCHMAKER_CODE.getMessage());
             throw new GlobalException(ErrorInfo.INVALID_MATCHMAKER_CODE);
         }
-        Optional<MatchMaker> matchMakerOptional = matchMakerRepository.findById(decryptedMatchMakerId);
-        if (matchMakerOptional.isEmpty()) {
-            log.error(ErrorInfo.MATCHMAKER_NOT_FOUND.getMessage());
-            throw new GlobalException(ErrorInfo.MATCHMAKER_NOT_FOUND);
-        }
-        MatchMaker invitingMatchMaker = matchMakerOptional.get();
+
+        MatchMaker invitingMatchMaker = matchMakerRepository.findById(decryptedMatchMakerId)
+                .orElseThrow(() -> {
+                    log.error(ErrorInfo.MATCHMAKER_NOT_FOUND.getMessage());
+                    return new GlobalException(ErrorInfo.MATCHMAKER_NOT_FOUND);
+                });
 
         /**
          * 3. 유저와 주선자가 서로 friendship 관계가 아닌지 확인
@@ -81,7 +79,6 @@ public class FriendshipService {
                                 .and(friendship.matchMaker.eq(invitingMatchMaker))
                 )
                 .fetchOne();
-        friendshipCount = friendshipCount == null ? 0 : friendshipCount;
 
         if (friendshipCount > 0) {
             log.error(ErrorInfo.FRIENDSHIP_ALREAD_EXIST.getMessage());

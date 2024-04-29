@@ -25,15 +25,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import static com.ndm.core.common.enums.OAuthCode.KAKAO;
-import static com.ndm.core.model.ErrorInfo.*;
+import static com.ndm.core.model.ErrorInfo.INTERNAL_SERVER_ERROR;
+import static com.ndm.core.model.ErrorInfo.INVALID_TOKEN;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class KakaoLoginService {
 
@@ -56,7 +58,6 @@ public class KakaoLoginService {
 
     private final RSACrypto rsaCrypto;
 
-    @Transactional
     public KakaoLoginDto kakaoLogin(KakaoLoginDto loginDto) {
         /**
          * 0. authorization code가 없을 경우
@@ -161,7 +162,7 @@ public class KakaoLoginService {
 
     private KakaoOAuthResponseDto requestOAuthToken(String authorizationCode, boolean forLogin) {
         log.info("requestOAuthToken(authorizationCode) ====== {}", authorizationCode);
-        if (authorizationCode == null || authorizationCode.isEmpty()) {
+        if (!StringUtils.hasText(authorizationCode)) {
             // 카카오 authorization code가 없음
             throw new GlobalException(INVALID_TOKEN);
         }
